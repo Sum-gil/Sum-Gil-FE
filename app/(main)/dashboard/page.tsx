@@ -12,11 +12,8 @@ export default function DashboardPage() {
       </section>
 
       <EnvironmentCards />
-      
       <AISearchSection />
-      
       <RecommendedPlaces />
-      
       <QuickActions />
     </div>
   )

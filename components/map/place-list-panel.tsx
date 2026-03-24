@@ -22,6 +22,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Navigation } from "lucide-react"
+import { buildKakaoDirectionsUrl } from "@/lib/kakao-navigation"
 import type { PlaceItem } from "@/app/(main)/map/page"
 
 type PlaceListPanelProps = {
@@ -29,6 +31,10 @@ type PlaceListPanelProps = {
   selectedPlaceId: number | null
   onSelectPlace: (placeId: number) => void
   loading?: boolean
+  currentPosition: {
+    latitude: number
+    longitude: number
+  }
 }
 
 export function PlaceListPanel({
@@ -36,6 +42,7 @@ export function PlaceListPanel({
   selectedPlaceId,
   onSelectPlace,
   loading = false,
+  currentPosition,
 }: PlaceListPanelProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("전체")
@@ -186,6 +193,40 @@ export function PlaceListPanel({
                             <span>{place.reviews}</span>
                           </div>
                         )}
+                      </div>
+                      <div className="flex gap-2 mt-3">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="flex-1"
+                          onClick={(e) => {
+                            e.stopPropagation()
+
+                            const url = buildKakaoDirectionsUrl({
+                              originName: "현재 위치",
+                              originLat: currentPosition.latitude,
+                              originLng: currentPosition.longitude,
+                              destName: place.name,
+                              destLat: place.latitude,
+                              destLng: place.longitude,
+                              mode: "walk",
+                            })
+
+                            window.open(url, "_blank")
+                          }}
+                        >
+                          <Navigation className="w-4 h-4 mr-1" />
+                          길안내
+                        </Button>
+
+                        <Link
+                          href={`/place/${place.placeId ?? place.id}`}
+                          className="inline-flex items-center justify-center rounded-md border px-3 text-xs hover:bg-accent"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          상세보기
+                        </Link>
                       </div>
                     </CardContent>
                   </Card>

@@ -114,6 +114,7 @@ export default function MapPage() {
         selectedPlaceId={selectedPlaceId}
         onSelectPlace={setSelectedPlaceId}
         loading={loading}
+        currentPosition={{ latitude, longitude }}
       />
 
       <MapView

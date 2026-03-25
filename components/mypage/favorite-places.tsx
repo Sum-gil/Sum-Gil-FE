@@ -7,19 +7,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import axios from "axios"
 
-// 백엔드 FavoriteResponse DTO 구조와 100% 일치
 interface FavoriteResponse {
-  id: number;         // 즐겨찾기 자체 ID (삭제 시 필요)
-  walkSpotId: number; // 산책 장소 ID (이동 시 필요)
-  name: string;       // 장소 이름
-  address: string;    // 장소 주소
+  id: number;        
+  walkSpotId: number;
+  name: string;      
+  address: string;    
 }
 
 export function FavoritePlaces() {
   const [favorites, setFavorites] = useState<FavoriteResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 1. 즐겨찾기 목록 불러오기
   const fetchFavorites = async () => {
     try {
       const token = localStorage.getItem("accessToken");
@@ -38,9 +36,8 @@ export function FavoritePlaces() {
     fetchFavorites();
   }, []);
 
-  // 2. 즐겨찾기 삭제 처리
   const handleDelete = async (e: React.MouseEvent, favoriteId: number) => {
-    e.preventDefault(); // Link 클릭 이벤트 방지
+    e.preventDefault(); 
     if (!confirm("즐겨찾기에서 삭제하시겠습니까?")) return;
 
     try {
@@ -48,7 +45,6 @@ export function FavoritePlaces() {
       await axios.delete(`http://localhost:8080/api/favorites/${favoriteId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      // 삭제 후 리스트에서 즉시 제거
       setFavorites(favorites.filter(f => f.id !== favoriteId));
     } catch (error) {
       alert("삭제에 실패했습니다.");

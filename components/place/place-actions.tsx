@@ -27,7 +27,6 @@ export function PlaceActions({ placeId }: PlaceActionsProps) {
           headers: { Authorization: `Bearer ${token}` }
         })
         
-        // 내 목록 중 현재 장소가 있는지 확인
         const existing = res.data.find((f: any) => f.walkSpotId === Number(placeId))
         if (existing) {
           setIsFavorite(true)
@@ -40,27 +39,24 @@ export function PlaceActions({ placeId }: PlaceActionsProps) {
     checkFavorite()
   }, [placeId])
 
-  // [추가] 즐겨찾기 토글 핸들러
   const handleFavoriteToggle = async () => {
     try {
       const token = localStorage.getItem("accessToken")
       if (!token) return alert("로그인이 필요합니다.")
 
       if (isFavorite && favoriteId) {
-        // 이미 등록된 경우 -> 삭제
         await axios.delete(`http://localhost:8080/api/favorites/${favoriteId}`, {
           headers: { Authorization: `Bearer ${token}` }
         })
         setIsFavorite(false)
         setFavoriteId(null)
       } else {
-        // 등록되지 않은 경우 -> 추가
         const res = await axios.post("http://localhost:8080/api/favorites", 
           { walkSpotId: Number(placeId) },
           { headers: { Authorization: `Bearer ${token}` } }
         )
         setIsFavorite(true)
-        setFavoriteId(res.data) // 백엔드에서 반환한 ID(Long) 저장
+        setFavoriteId(res.data) 
       }
     } catch (error) {
       console.error(error)
@@ -101,8 +97,8 @@ export function PlaceActions({ placeId }: PlaceActionsProps) {
       <Button
         variant="outline"
         size="icon"
-        className={`h-12 w-12 ${isFavorite ? "bg-rose-50 border-rose-100" : ""}`} // [수정] 활성화 시 배경색 변화
-        onClick={handleFavoriteToggle} // [수정] 핸들러 연결
+        className={`h-12 w-12 ${isFavorite ? "bg-rose-50 border-rose-100" : ""}`} 
+        onClick={handleFavoriteToggle} 
       >
         <Heart
           className={`w-5 h-5 ${

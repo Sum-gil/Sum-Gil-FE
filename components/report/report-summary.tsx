@@ -1,42 +1,57 @@
 import { MapPin, Clock, Flame, Heart } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
+import type { MonthlyReportResponse } from "@/lib/api"
 
-const summaryData = [
-  {
-    icon: MapPin,
-    label: "총 거리",
-    value: "15.6km",
-    subtext: "이번 주",
-    color: "text-primary",
-    bgColor: "bg-primary/10",
-  },
-  {
-    icon: Clock,
-    label: "총 시간",
-    value: "3시간 10분",
-    subtext: "이번 주",
-    color: "text-accent",
-    bgColor: "bg-accent/10",
-  },
-  {
-    icon: Flame,
-    label: "소모 칼로리",
-    value: "892 kcal",
-    subtext: "이번 주",
-    color: "text-orange-500",
-    bgColor: "bg-orange-50",
-  },
-  {
-    icon: Heart,
-    label: "평균 건강점수",
-    value: "90점",
-    subtext: "이번 주",
-    color: "text-primary",
-    bgColor: "bg-primary/10",
-  },
-]
+type ReportSummaryProps = {
+  monthlyReport: MonthlyReportResponse | null
+  loading?: boolean
+}
 
-export function ReportSummary() {
+export function ReportSummary({
+  monthlyReport,
+  loading = false,
+}: ReportSummaryProps) {
+  const summaryData = [
+    {
+      icon: MapPin,
+      label: "총 거리",
+      value: loading
+        ? "불러오는 중..."
+        : `${monthlyReport?.totalDistanceKm?.toFixed(2) ?? "0.00"} km`,
+      subtext: monthlyReport ? `${monthlyReport.year}년 ${monthlyReport.month}월` : "선택 월",
+      color: "text-primary",
+      bgColor: "bg-primary/10",
+    },
+    {
+      icon: Clock,
+      label: "총 시간",
+      value: loading ? "불러오는 중..." : monthlyReport?.totalDurationText ?? "0초",
+      subtext: "월 누적",
+      color: "text-accent",
+      bgColor: "bg-accent/10",
+    },
+    {
+      icon: Flame,
+      label: "소모 칼로리",
+      value: loading
+        ? "불러오는 중..."
+        : `${monthlyReport?.totalCalories?.toFixed(1) ?? "0.0"} kcal`,
+      subtext: "월 누적",
+      color: "text-orange-500",
+      bgColor: "bg-orange-50 dark:bg-orange-500/10",
+    },
+    {
+      icon: Heart,
+      label: "평균 건강점수",
+      value: loading
+        ? "불러오는 중..."
+        : `${monthlyReport?.averageHealthScore?.toFixed(1) ?? "0.0"}점`,
+      subtext: "월 평균",
+      color: "text-primary",
+      bgColor: "bg-primary/10",
+    },
+  ]
+
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
       {summaryData.map((item) => (

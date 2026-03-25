@@ -1,10 +1,10 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { Play, Square, Pause, MapPin } from "lucide-react"
+import { Square, Pause, MapPin } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { startWalk, saveWalkPoints, endWalk } from "@/lib/api"
+import { saveWalkPoints, endWalk } from "@/lib/api"
 
 type PositionPoint = {
   latitude: number
@@ -12,12 +12,19 @@ type PositionPoint = {
   recordedAt: string
 }
 
-export function WalkingTracker() {
-  const [isTracking, setIsTracking] = useState(false)
+interface WalkingTrackerProps {
+  walkRecordId: number | null
+  placeId: number | null
+}
+
+export function WalkingTracker({
+  walkRecordId,
+  placeId,
+}: WalkingTrackerProps) {
+  const [isTracking, setIsTracking] = useState(Boolean(walkRecordId))
   const [isPaused, setIsPaused] = useState(false)
   const [time, setTime] = useState(0)
   const [distance, setDistance] = useState(0)
-  const [walkRecordId, setWalkRecordId] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const timerRef = useRef<NodeJS.Timeout | null>(null)
@@ -27,7 +34,16 @@ export function WalkingTracker() {
     { latitude: number; longitude: number; sequence: number; recordedAt: string }[]
   >([])
   const lastPositionRef = useRef<PositionPoint | null>(null)
-  const walkSpotIdRef = useRef<number>(1) // 임시 고정값. 나중에 실제 장소 id로 교체
+
+  useEffect(() => {
+    if (!walkRecordId) {
+      setIsTracking(false)
+      return
+    }
+
+    setIsTracking(true)
+    setIsPaused(false)
+  }, [walkRecordId])
 
   useEffect(() => {
     if (isTracking && !isPaused) {
@@ -158,36 +174,24 @@ export function WalkingTracker() {
     }
   }
 
-  const handleStart = async () => {
-    try {
-      setError(null)
-
-      const response = await startWalk({
-        walkSpotId: walkSpotIdRef.current,
-      })
-
-      setWalkRecordId(response.walkRecordId)
-      setIsTracking(true)
-      setIsPaused(false)
-      setTime(0)
-      setDistance(0)
-      pointSequenceRef.current = 1
-      pendingPointsRef.current = []
-      lastPositionRef.current = null
-
-      startGeoTracking()
-    } catch (e) {
-      console.error(e)
-      setError("산책 시작에 실패했습니다.")
+  useEffect(() => {
+    if (!walkRecordId || !isTracking || isPaused) {
+      stopGeoTracking()
+      return
     }
-  }
+
+    startGeoTracking()
+
+    return () => {
+      stopGeoTracking()
+    }
+  }, [walkRecordId, isTracking, isPaused])
 
   const handlePause = async () => {
     if (!isTracking) return
 
     if (isPaused) {
       setIsPaused(false)
-      startGeoTracking()
     } else {
       setIsPaused(true)
       stopGeoTracking()
@@ -204,19 +208,20 @@ export function WalkingTracker() {
         await endWalk(walkRecordId, {
           totalDistance: Number(distance.toFixed(3)),
           durationSeconds: time,
-          calories: Number((distance * 60).toFixed(1)), // 임시 계산식
-          averageHealthScore: 80, // 임시 고정값
+          calories: Number((distance * 60).toFixed(1)),
+          averageHealthScore: 80,
         })
       }
 
       setIsTracking(false)
       setIsPaused(false)
-      setWalkRecordId(null)
       setTime(0)
       setDistance(0)
       pointSequenceRef.current = 1
       pendingPointsRef.current = []
       lastPositionRef.current = null
+
+      alert("산책이 종료되었습니다.")
     } catch (e) {
       console.error(e)
       setError("산책 종료에 실패했습니다.")
@@ -238,7 +243,11 @@ export function WalkingTracker() {
         <div className="flex items-center gap-2 mb-4">
           <MapPin className="w-5 h-5" />
           <span className="font-medium">
-            {isTracking ? (isPaused ? "일시 정지됨" : "산책 중...") : "산책을 시작해보세요"}
+            {walkRecordId
+              ? isPaused
+                ? "산책 일시 정지됨"
+                : "산책 중..."
+              : "장소 상세에서 산책을 시작해주세요"}
           </span>
         </div>
 
@@ -253,45 +262,47 @@ export function WalkingTracker() {
           </div>
         </div>
 
-        {walkRecordId && (
+        {placeId && (
           <p className="text-xs text-primary-foreground/80 mt-4">
+            placeId: {placeId}
+          </p>
+        )}
+
+        {walkRecordId && (
+          <p className="text-xs text-primary-foreground/80 mt-1">
             walkRecordId: {walkRecordId}
           </p>
         )}
       </div>
 
       <CardContent className="p-4">
-        <div className="flex gap-3">
-          {!isTracking ? (
-            <Button className="flex-1 h-12 gap-2" onClick={handleStart}>
-              <Play className="w-5 h-5" />
-              산책 시작
+        {!walkRecordId ? (
+          <div className="text-sm text-muted-foreground">
+            장소 상세 페이지에서 "여기서 산책 시작" 버튼을 눌러주세요.
+          </div>
+        ) : (
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              className="flex-1 h-12 gap-2"
+              onClick={handlePause}
+            >
+              <Pause className="w-5 h-5" />
+              {isPaused ? "계속하기" : "일시 정지"}
             </Button>
-          ) : (
-            <>
-              <Button
-                variant="outline"
-                className="flex-1 h-12 gap-2"
-                onClick={handlePause}
-              >
-                <Pause className="w-5 h-5" />
-                {isPaused ? "계속하기" : "일시 정지"}
-              </Button>
-              <Button
-                variant="destructive"
-                className="flex-1 h-12 gap-2"
-                onClick={handleStop}
-              >
-                <Square className="w-5 h-5" />
-                종료
-              </Button>
-            </>
-          )}
-        </div>
 
-        {error && (
-          <p className="text-sm text-red-500 mt-3">{error}</p>
+            <Button
+              variant="destructive"
+              className="flex-1 h-12 gap-2"
+              onClick={handleStop}
+            >
+              <Square className="w-5 h-5" />
+              종료
+            </Button>
+          </div>
         )}
+
+        {error && <p className="text-sm text-red-500 mt-3">{error}</p>}
       </CardContent>
     </Card>
   )

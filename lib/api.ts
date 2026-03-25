@@ -85,6 +85,39 @@ export type WalkEndRequest = {
   averageHealthScore: number
 }
 
+export type WalkRecordListResponse = {
+  walkRecordId: number
+  walkSpotId: number
+  walkSpotName: string
+  startedAt: string
+  endedAt: string | null
+  totalDistance: number | null
+  durationSeconds: number | null
+  calories: number | null
+  averageHealthScore: number | null
+  status: string
+}
+
+export type WalkPathPointResponse = {
+  latitude: number
+  longitude: number
+  sequence: number
+  recordedAt: string
+}
+
+export type WalkRecordDetailResponse = {
+  walkRecordId: number
+  walkSpotId: number
+  startedAt: string
+  endedAt: string | null
+  totalDistance: number | null
+  durationSeconds: number | null
+  calories: number | null
+  averageHealthScore: number | null
+  status: string
+  pathPoints: WalkPathPointResponse[]
+}
+
 export async function startWalk(
   data: WalkStartRequest
 ): Promise<WalkStartResponse> {
@@ -112,4 +145,60 @@ export async function endWalk(
     method: "POST",
     body: JSON.stringify(data),
   })
+}
+
+export async function getMyWalkRecords(): Promise<WalkRecordListResponse[]> {
+  return apiFetch<WalkRecordListResponse[]>("/api/walk-records")
+}
+
+export async function getWalkRecordDetail(
+  walkRecordId: number
+): Promise<WalkRecordDetailResponse> {
+  return apiFetch<WalkRecordDetailResponse>(`/api/walk-records/${walkRecordId}`)
+}
+
+/* =========================
+   report
+========================= */
+
+export type MonthlyReportResponse = {
+  year: number
+  month: number
+  totalWalkCount: number
+  totalDistanceKm: number
+  totalDurationSeconds: number
+  totalDurationText: string
+  averageDurationSeconds: number
+  averageDurationText: string
+  averageHealthScore: number
+  totalCalories: number
+}
+
+export type WalkReportResponse = {
+  walkRecordId: number
+  walkSpotId: number
+  startedAt: string
+  endedAt: string | null
+  totalDurationSeconds: number
+  totalDurationText: string
+  totalDistanceKm: number
+  averageSpeedKmh: number
+  calories: number
+  averageHealthScore: number
+  reportMessage: string
+}
+
+export async function getMonthlyReport(
+  year: number,
+  month: number
+): Promise<MonthlyReportResponse> {
+  return apiFetch<MonthlyReportResponse>(
+    `/api/reports/monthly?year=${year}&month=${month}`
+  )
+}
+
+export async function getWalkReport(
+  walkRecordId: number
+): Promise<WalkReportResponse> {
+  return apiFetch<WalkReportResponse>(`/api/reports/walks/${walkRecordId}`)
 }

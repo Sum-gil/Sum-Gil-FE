@@ -50,17 +50,14 @@ export function UserProfile({ initialData }: UserProfileProps) {
       
       <CardContent className="relative pt-0 pb-6 px-6">
         <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4 -mt-10">
-          {/* 아바타 */}
           <Avatar className="w-20 h-20 border-4 border-white shadow-md bg-white">
             <AvatarFallback className="bg-emerald-50 text-emerald-600 text-2xl font-bold">
               {profile.nickname ? profile.nickname[0] : "이"}
             </AvatarFallback>
           </Avatar>
           
-          {/* 유저 정보 영역 */}
           <div className="flex-1 text-center sm:text-left">
             {isEditing ? (
-              /* 💡 편집 모드: pt-12를 주어 그라데이션 영역 아래로 확실히 내렸습니다. */
               <div className="pt-12 sm:pt-10 space-y-3 pb-2">
                 <Input 
                   value={tempProfile.nickname} 
@@ -79,7 +76,6 @@ export function UserProfile({ initialData }: UserProfileProps) {
                 </div>
               </div>
             ) : (
-              /* 보기 모드: 이메일은 표시하지 않습니다. */
               <div className="pb-1">
                 <h1 className="text-xl font-bold text-slate-800 leading-tight">
                   {profile.nickname}
@@ -94,7 +90,6 @@ export function UserProfile({ initialData }: UserProfileProps) {
             )}
           </div>
 
-          {/* 버튼 영역 */}
           <div className="flex gap-2 pb-1">
             {isEditing ? (
               <>

@@ -17,6 +17,8 @@ interface WalkingTrackerProps {
   placeId: number | null
 }
 
+const API_BASE = "http://localhost:8080/api/places"
+
 export function WalkingTracker({
   walkRecordId,
   placeId,
@@ -26,6 +28,7 @@ export function WalkingTracker({
   const [time, setTime] = useState(0)
   const [distance, setDistance] = useState(0)
   const [error, setError] = useState<string | null>(null)
+  const [healthScore, setHealthScore] = useState<number>(80) // 기본값만 넣고, 실제로는 API로 덮어씀
 
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const watchIdRef = useRef<number | null>(null)
@@ -44,6 +47,31 @@ export function WalkingTracker({
     setIsTracking(true)
     setIsPaused(false)
   }, [walkRecordId])
+
+  // placeId가 있으면 해당 장소의 건강점수 가져오기
+  useEffect(() => {
+    const fetchHealthScore = async () => {
+      if (!placeId) return
+
+      try {
+        const res = await fetch(`${API_BASE}/${placeId}/health-score`, {
+          cache: "no-store",
+        })
+
+        if (!res.ok) {
+          console.error("건강점수 조회 실패:", res.status)
+          return
+        }
+
+        const data = await res.json()
+        setHealthScore(data.healthScore ?? 80)
+      } catch (e) {
+        console.error("건강점수 조회 에러:", e)
+      }
+    }
+
+    fetchHealthScore()
+  }, [placeId])
 
   useEffect(() => {
     if (isTracking && !isPaused) {
@@ -209,7 +237,7 @@ export function WalkingTracker({
           totalDistance: Number(distance.toFixed(3)),
           durationSeconds: time,
           calories: Number((distance * 60).toFixed(1)),
-          averageHealthScore: 80,
+          averageHealthScore: healthScore,
         })
       }
 
@@ -273,6 +301,10 @@ export function WalkingTracker({
             walkRecordId: {walkRecordId}
           </p>
         )}
+
+        <p className="text-xs text-primary-foreground/80 mt-1">
+          건강점수: {healthScore}
+        </p>
       </div>
 
       <CardContent className="p-4">

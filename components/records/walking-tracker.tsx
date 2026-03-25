@@ -1,32 +1,50 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Play, Square, Pause, MapPin } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { startWalk, saveWalkPoints, endWalk } from "@/lib/api"
+
+type PositionPoint = {
+  latitude: number
+  longitude: number
+  recordedAt: string
+}
 
 export function WalkingTracker() {
   const [isTracking, setIsTracking] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
   const [time, setTime] = useState(0)
   const [distance, setDistance] = useState(0)
-  const intervalRef = useRef<NodeJS.Timeout | null>(null)
+  const [walkRecordId, setWalkRecordId] = useState<number | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const watchIdRef = useRef<number | null>(null)
+  const pointSequenceRef = useRef(1)
+  const pendingPointsRef = useRef<
+    { latitude: number; longitude: number; sequence: number; recordedAt: string }[]
+  >([])
+  const lastPositionRef = useRef<PositionPoint | null>(null)
+  const walkSpotIdRef = useRef<number>(1) // 임시 고정값. 나중에 실제 장소 id로 교체
 
   useEffect(() => {
     if (isTracking && !isPaused) {
-      intervalRef.current = setInterval(() => {
+      timerRef.current = setInterval(() => {
         setTime((prev) => prev + 1)
-        setDistance((prev) => prev + 0.005 + Math.random() * 0.003)
       }, 1000)
     } else {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current)
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+        timerRef.current = null
       }
     }
 
     return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current)
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+        timerRef.current = null
       }
     }
   }, [isTracking, isPaused])
@@ -35,24 +53,184 @@ export function WalkingTracker() {
     const hrs = Math.floor(seconds / 3600)
     const mins = Math.floor((seconds % 3600) / 60)
     const secs = seconds % 60
-    return `${hrs.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
+    return `${hrs.toString().padStart(2, "0")}:${mins
+      .toString()
+      .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
   }
 
-  const handleStart = () => {
-    setIsTracking(true)
-    setIsPaused(false)
+  const toRadians = (deg: number) => (deg * Math.PI) / 180
+
+  const calculateDistanceKm = (
+    lat1: number,
+    lng1: number,
+    lat2: number,
+    lng2: number
+  ) => {
+    const R = 6371
+    const dLat = toRadians(lat2 - lat1)
+    const dLng = toRadians(lng2 - lng1)
+
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRadians(lat1)) *
+        Math.cos(toRadians(lat2)) *
+        Math.sin(dLng / 2) *
+        Math.sin(dLng / 2)
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+    return R * c
   }
 
-  const handlePause = () => {
-    setIsPaused(!isPaused)
+  const flushPoints = async () => {
+    if (!walkRecordId || pendingPointsRef.current.length === 0) return
+
+    const pointsToSend = [...pendingPointsRef.current]
+    pendingPointsRef.current = []
+
+    try {
+      await saveWalkPoints(walkRecordId, {
+        points: pointsToSend,
+      })
+    } catch (e) {
+      console.error("좌표 저장 실패", e)
+      pendingPointsRef.current = [...pointsToSend, ...pendingPointsRef.current]
+    }
   }
 
-  const handleStop = () => {
-    setIsTracking(false)
-    setIsPaused(false)
-    setTime(0)
-    setDistance(0)
+  const startGeoTracking = () => {
+    if (!navigator.geolocation) {
+      setError("이 브라우저에서는 위치 추적을 지원하지 않습니다.")
+      return
+    }
+
+    watchIdRef.current = navigator.geolocation.watchPosition(
+      (position) => {
+        const currentPoint: PositionPoint = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          recordedAt: new Date().toISOString(),
+        }
+
+        const lastPoint = lastPositionRef.current
+
+        if (lastPoint) {
+          const movedKm = calculateDistanceKm(
+            lastPoint.latitude,
+            lastPoint.longitude,
+            currentPoint.latitude,
+            currentPoint.longitude
+          )
+
+          if (movedKm > 0.001) {
+            setDistance((prev) => prev + movedKm)
+          }
+        }
+
+        pendingPointsRef.current.push({
+          latitude: currentPoint.latitude,
+          longitude: currentPoint.longitude,
+          sequence: pointSequenceRef.current++,
+          recordedAt: currentPoint.recordedAt,
+        })
+
+        lastPositionRef.current = currentPoint
+
+        if (pendingPointsRef.current.length >= 5) {
+          flushPoints()
+        }
+      },
+      (geoError) => {
+        console.error(geoError)
+        setError("위치 정보를 가져오지 못했습니다. 위치 권한을 확인해주세요.")
+      },
+      {
+        enableHighAccuracy: true,
+        maximumAge: 0,
+        timeout: 10000,
+      }
+    )
   }
+
+  const stopGeoTracking = () => {
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current)
+      watchIdRef.current = null
+    }
+  }
+
+  const handleStart = async () => {
+    try {
+      setError(null)
+
+      const response = await startWalk({
+        walkSpotId: walkSpotIdRef.current,
+      })
+
+      setWalkRecordId(response.walkRecordId)
+      setIsTracking(true)
+      setIsPaused(false)
+      setTime(0)
+      setDistance(0)
+      pointSequenceRef.current = 1
+      pendingPointsRef.current = []
+      lastPositionRef.current = null
+
+      startGeoTracking()
+    } catch (e) {
+      console.error(e)
+      setError("산책 시작에 실패했습니다.")
+    }
+  }
+
+  const handlePause = async () => {
+    if (!isTracking) return
+
+    if (isPaused) {
+      setIsPaused(false)
+      startGeoTracking()
+    } else {
+      setIsPaused(true)
+      stopGeoTracking()
+      await flushPoints()
+    }
+  }
+
+  const handleStop = async () => {
+    try {
+      stopGeoTracking()
+      await flushPoints()
+
+      if (walkRecordId) {
+        await endWalk(walkRecordId, {
+          totalDistance: Number(distance.toFixed(3)),
+          durationSeconds: time,
+          calories: Number((distance * 60).toFixed(1)), // 임시 계산식
+          averageHealthScore: 80, // 임시 고정값
+        })
+      }
+
+      setIsTracking(false)
+      setIsPaused(false)
+      setWalkRecordId(null)
+      setTime(0)
+      setDistance(0)
+      pointSequenceRef.current = 1
+      pendingPointsRef.current = []
+      lastPositionRef.current = null
+    } catch (e) {
+      console.error(e)
+      setError("산책 종료에 실패했습니다.")
+    }
+  }
+
+  useEffect(() => {
+    return () => {
+      stopGeoTracking()
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+      }
+    }
+  }, [])
 
   return (
     <Card className="border-0 shadow-sm overflow-hidden">
@@ -63,7 +241,7 @@ export function WalkingTracker() {
             {isTracking ? (isPaused ? "일시 정지됨" : "산책 중...") : "산책을 시작해보세요"}
           </span>
         </div>
-        
+
         <div className="grid grid-cols-2 gap-6">
           <div>
             <p className="text-3xl font-bold">{formatTime(time)}</p>
@@ -74,8 +252,14 @@ export function WalkingTracker() {
             <p className="text-sm text-primary-foreground/70 mt-1">거리</p>
           </div>
         </div>
+
+        {walkRecordId && (
+          <p className="text-xs text-primary-foreground/80 mt-4">
+            walkRecordId: {walkRecordId}
+          </p>
+        )}
       </div>
-      
+
       <CardContent className="p-4">
         <div className="flex gap-3">
           {!isTracking ? (
@@ -104,6 +288,10 @@ export function WalkingTracker() {
             </>
           )}
         </div>
+
+        {error && (
+          <p className="text-sm text-red-500 mt-3">{error}</p>
+        )}
       </CardContent>
     </Card>
   )

@@ -52,3 +52,64 @@ export async function logout(): Promise<string> {
     method: "POST",
   })
 }
+
+/* =========================
+   walk record
+========================= */
+
+export type WalkStartRequest = {
+  walkSpotId: number
+}
+
+export type WalkStartResponse = {
+  walkRecordId: number
+  startedAt: string
+  status: string
+}
+
+export type WalkPointItem = {
+  latitude: number
+  longitude: number
+  sequence: number
+  recordedAt: string
+}
+
+export type WalkPointRequest = {
+  points: WalkPointItem[]
+}
+
+export type WalkEndRequest = {
+  totalDistance: number
+  durationSeconds: number
+  calories: number
+  averageHealthScore: number
+}
+
+export async function startWalk(
+  data: WalkStartRequest
+): Promise<WalkStartResponse> {
+  return apiFetch<WalkStartResponse>("/api/walk-records/start", {
+    method: "POST",
+    body: JSON.stringify(data),
+  })
+}
+
+export async function saveWalkPoints(
+  walkRecordId: number,
+  data: WalkPointRequest
+): Promise<void> {
+  return apiFetch<void>(`/api/walk-records/${walkRecordId}/points`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  })
+}
+
+export async function endWalk(
+  walkRecordId: number,
+  data: WalkEndRequest
+): Promise<void> {
+  return apiFetch<void>(`/api/walk-records/${walkRecordId}/end`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  })
+}

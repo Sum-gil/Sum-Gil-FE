@@ -7,11 +7,6 @@ import { ReviewList } from "@/components/community/review-list"
 export default function CommunityPage() {
   const [searchKeyword, setSearchKeyword] = useState("")
   const [filter, setFilter] = useState("최신순")
-  const [refreshKey, setRefreshKey] = useState(0)
-
-  const handleReviewCreated = () => {
-    setRefreshKey((prev) => prev + 1)
-  }
 
   return (
     <div className="container px-4 py-6 max-w-4xl mx-auto space-y-6">
@@ -20,13 +15,11 @@ export default function CommunityPage() {
         onSearchChange={setSearchKeyword}
         filter={filter}
         onFilterChange={setFilter}
-        onReviewCreated={handleReviewCreated}
       />
 
       <ReviewList
         searchKeyword={searchKeyword}
         filter={filter}
-        refreshKey={refreshKey}
       />
     </div>
   )

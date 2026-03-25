@@ -266,3 +266,18 @@ export async function deleteReview(reviewId: number): Promise<void> {
 export async function getPopularPlaces(): Promise<WalkSpotSummary[]> {
   return apiFetch<WalkSpotSummary[]>("/api/community/popular-places")
 }
+
+export type CreateReviewByWalkRecordRequest = {
+  rating: number
+  content: string
+}
+
+export async function createReviewByWalkRecord(
+  walkRecordId: number,
+  request: CreateReviewByWalkRecordRequest
+) {
+  return apiFetch(`/api/reviews/walk-records/${walkRecordId}`, {
+    method: "POST",
+    body: JSON.stringify(request),
+  })
+}

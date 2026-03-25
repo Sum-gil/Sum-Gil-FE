@@ -10,7 +10,6 @@ import { getCommunityReviews, type ReviewResponse } from "@/lib/api"
 type ReviewListProps = {
   searchKeyword: string
   filter: string
-  refreshKey: number
 }
 
 function StarRating({ rating }: { rating: number }) {
@@ -51,7 +50,6 @@ function formatRelativeTime(dateString: string) {
 export function ReviewList({
   searchKeyword,
   filter,
-  refreshKey,
 }: ReviewListProps) {
   const [reviews, setReviews] = useState<ReviewResponse[]>([])
   const [loading, setLoading] = useState(true)
@@ -73,7 +71,7 @@ export function ReviewList({
     }
 
     fetchReviews()
-  }, [refreshKey])
+  }, [])
 
   const filteredReviews = useMemo(() => {
     const keyword = searchKeyword.trim().toLowerCase()

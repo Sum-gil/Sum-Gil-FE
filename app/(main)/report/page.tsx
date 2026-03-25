@@ -220,6 +220,7 @@ export default function ReportPage() {
         />
 
         <WalkReportDetail
+          walkRecordId={selectedWalkId}
           walkReport={selectedWalkReport}
           walkDetail={selectedWalkDetail}
           loading={detailLoading}

@@ -202,3 +202,70 @@ export async function getWalkReport(
 ): Promise<WalkReportResponse> {
   return apiFetch<WalkReportResponse>(`/api/reports/walks/${walkRecordId}`)
 }
+
+/* =========================
+   review / community
+========================= */
+
+export type ReviewResponse = {
+  id: number
+  walkSpotId: number
+  walkSpotName: string
+  rating: number
+  content: string
+  createdAt: string
+  nickname: string
+}
+
+export type ReviewRequest = {
+  walkSpotId: number
+  rating: number
+  content: string
+}
+
+export type WalkSpotSummary = {
+  id: number
+  name: string
+  latitude: number
+  longitude: number
+}
+
+export async function getCommunityReviews(): Promise<ReviewResponse[]> {
+  return apiFetch<ReviewResponse[]>("/api/community/reviews")
+}
+
+export async function getReviewsByWalkSpot(
+  walkSpotId: number
+): Promise<ReviewResponse[]> {
+  return apiFetch<ReviewResponse[]>(`/api/reviews?walkSpotId=${walkSpotId}`)
+}
+
+export async function createReview(data: ReviewRequest): Promise<number> {
+  return apiFetch<number>("/api/reviews", {
+    method: "POST",
+    body: JSON.stringify(data),
+  })
+}
+
+export async function updateReview(
+  reviewId: number,
+  data: ReviewRequest
+): Promise<void> {
+  return apiFetch<void>(`/api/reviews/${reviewId}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  })
+}
+
+export async function deleteReview(reviewId: number): Promise<void> {
+  return apiFetch<void>(`/api/reviews/${reviewId}`, {
+    method: "DELETE",
+  })
+}
+
+export async function getPopularPlaces(): Promise<WalkSpotSummary[]> {
+  return apiFetch<WalkSpotSummary[]>("/api/community/popular-places")
+}
+
+
+

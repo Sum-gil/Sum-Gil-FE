@@ -1,124 +1,353 @@
-import { Star, Heart, MessageCircle, User } from "lucide-react"
+"use client"
+
+import { useEffect, useMemo, useState } from "react"
+import { Star, MessageCircle, Pencil, Trash2 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Textarea } from "@/components/ui/textarea"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import {
+  getCommunityReviews,
+  updateReview,
+  deleteReview,
+  type ReviewResponse,
+} from "@/lib/api"
 
-const reviews = [
-  {
-    id: 1,
-    author: "산책러123",
-    avatar: "S",
-    location: "올림픽공원 평화의광장",
-    rating: 5,
-    content: "넓은 잔디밭에서 여유롭게 산책하기 좋아요. 주말에는 사람이 많지만 평일 저녁에는 한산해서 좋습니다. 반려견 산책하기에도 최고!",
-    likes: 24,
-    comments: 5,
-    date: "2시간 전",
-    image: "https://images.unsplash.com/photo-1588714477688-cf28a50e94f7?w=400&h=250&fit=crop",
-  },
-  {
-    id: 2,
-    author: "건강한하루",
-    avatar: "건",
-    location: "한강 반포공원",
-    rating: 4,
-    content: "야경이 정말 예쁜 곳이에요. 특히 반포대교 달빛무지개분수가 가동되는 시간에 가면 좋습니다. 자전거 타는 사람이 많아서 조금 주의해야 해요.",
-    likes: 18,
-    comments: 3,
-    date: "5시간 전",
-    image: "https://images.unsplash.com/photo-1548115184-bc6544d06a58?w=400&h=250&fit=crop",
-  },
-  {
-    id: 3,
-    author: "서울탐험가",
-    avatar: "서",
-    location: "남산 둘레길",
-    rating: 5,
-    content: "서울 도심에서 자연을 느낄 수 있는 최고의 장소입니다. 경사가 있어서 운동 효과도 좋고, 공기가 맑아서 건강에도 좋아요.",
-    likes: 32,
-    comments: 8,
-    date: "1일 전",
-    image: null,
-  },
-  {
-    id: 4,
-    author: "아침산책",
-    avatar: "아",
-    location: "서울숲",
-    rating: 4,
-    content: "사슴도 볼 수 있고, 넓은 공원에서 피크닉하기 좋습니다. 다만 주말에는 너무 붐벼서 평일 방문을 추천드립니다.",
-    likes: 15,
-    comments: 2,
-    date: "2일 전",
-    image: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=250&fit=crop",
-  },
-]
+type ReviewListProps = {
+  searchKeyword: string
+  filter: string
+  refreshKey: number
+  onReviewChanged: () => void
+}
 
-function StarRating({ rating }: { rating: number }) {
+function StarRating({
+  rating,
+  onChange,
+  editable = false,
+}: {
+  rating: number
+  onChange?: (value: number) => void
+  editable?: boolean
+}) {
   return (
     <div className="flex gap-0.5">
-      {[1, 2, 3, 4, 5].map((star) => (
-        <Star
-          key={star}
-          className={`w-4 h-4 ${
-            star <= rating ? "fill-amber-400 text-amber-400" : "text-muted-foreground/30"
-          }`}
-        />
-      ))}
+      {[1, 2, 3, 4, 5].map((star) => {
+        const active = star <= rating
+
+        if (editable && onChange) {
+          return (
+            <button
+              key={star}
+              type="button"
+              onClick={() => onChange(star)}
+              className="transition-transform hover:scale-110"
+            >
+              <Star
+                className={`w-4 h-4 ${
+                  active
+                    ? "fill-amber-400 text-amber-400"
+                    : "text-muted-foreground/30"
+                }`}
+              />
+            </button>
+          )
+        }
+
+        return (
+          <Star
+            key={star}
+            className={`w-4 h-4 ${
+              active
+                ? "fill-amber-400 text-amber-400"
+                : "text-muted-foreground/30"
+            }`}
+          />
+        )
+      })}
     </div>
   )
 }
 
-export function ReviewList() {
+function formatRelativeTime(dateString: string) {
+  const date = new Date(dateString)
+  if (Number.isNaN(date.getTime())) return "-"
+
+  const now = new Date()
+  const diffSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
+
+  if (diffSeconds < 60) return "방금 전"
+  if (diffSeconds < 3600) return `${Math.floor(diffSeconds / 60)}분 전`
+  if (diffSeconds < 86400) return `${Math.floor(diffSeconds / 3600)}시간 전`
+  if (diffSeconds < 604800) return `${Math.floor(diffSeconds / 86400)}일 전`
+
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, "0")
+  const day = String(date.getDate()).padStart(2, "0")
+  return `${year}.${month}.${day}`
+}
+
+export function ReviewList({
+  searchKeyword,
+  filter,
+  refreshKey,
+  onReviewChanged,
+}: ReviewListProps) {
+  const [reviews, setReviews] = useState<ReviewResponse[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+
+  const [editingReview, setEditingReview] = useState<ReviewResponse | null>(null)
+  const [editRating, setEditRating] = useState(5)
+  const [editContent, setEditContent] = useState("")
+  const [submitting, setSubmitting] = useState(false)
+
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        setLoading(true)
+        setError("")
+        const data = await getCommunityReviews()
+        setReviews(data)
+      } catch (err) {
+        console.error("커뮤니티 리뷰 조회 실패:", err)
+        setError("리뷰를 불러오지 못했습니다.")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchReviews()
+  }, [refreshKey])
+
+  const filteredReviews = useMemo(() => {
+    const keyword = searchKeyword.trim().toLowerCase()
+    let next = [...reviews]
+
+    if (keyword) {
+      next = next.filter((review) => {
+        const place = review.walkSpotName?.toLowerCase() ?? ""
+        const content = review.content?.toLowerCase() ?? ""
+        const nickname = review.nickname?.toLowerCase() ?? ""
+
+        return (
+          place.includes(keyword) ||
+          content.includes(keyword) ||
+          nickname.includes(keyword)
+        )
+      })
+    }
+
+    if (filter === "별점순") {
+      next.sort((a, b) => b.rating - a.rating)
+    } else {
+      next.sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )
+    }
+
+    return next
+  }, [reviews, searchKeyword, filter])
+
+  const openEditDialog = (review: ReviewResponse) => {
+    setEditingReview(review)
+    setEditRating(review.rating)
+    setEditContent(review.content)
+  }
+
+  const handleUpdateReview = async () => {
+    if (!editingReview) return
+
+    if (!editContent.trim()) {
+      alert("리뷰 내용을 입력해주세요.")
+      return
+    }
+
+    try {
+      setSubmitting(true)
+
+      await updateReview(editingReview.id, {
+        walkSpotId: editingReview.walkSpotId,
+        rating: editRating,
+        content: editContent,
+      })
+
+      setEditingReview(null)
+      setEditRating(5)
+      setEditContent("")
+      onReviewChanged()
+      alert("리뷰가 수정되었습니다.")
+    } catch (error) {
+      console.error("리뷰 수정 실패:", error)
+      alert("리뷰 수정에 실패했습니다.")
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleDeleteReview = async (reviewId: number) => {
+    const ok = window.confirm("정말 이 리뷰를 삭제할까요?")
+    if (!ok) return
+
+    try {
+      await deleteReview(reviewId)
+      onReviewChanged()
+      alert("리뷰가 삭제되었습니다.")
+    } catch (error) {
+      console.error("리뷰 삭제 실패:", error)
+      alert("리뷰 삭제에 실패했습니다.")
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="py-12 text-center text-sm text-muted-foreground">
+        리뷰를 불러오는 중...
+      </div>
+    )
+  }
+
+  if (error) {
+    return <div className="py-12 text-center text-sm text-red-500">{error}</div>
+  }
+
+  if (filteredReviews.length === 0) {
+    return (
+      <div className="py-12 text-center text-sm text-muted-foreground">
+        리뷰가 없습니다.
+      </div>
+    )
+  }
+
   return (
-    <div className="space-y-4 pb-8">
-      {reviews.map((review) => (
-        <Card key={review.id} className="border-0 shadow-sm overflow-hidden">
-          <CardContent className="p-4 space-y-3">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-3">
-                <Avatar className="w-10 h-10">
-                  <AvatarFallback className="bg-primary/10 text-primary text-sm">
-                    {review.avatar}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="font-medium text-foreground text-sm">{review.author}</p>
-                  <p className="text-xs text-muted-foreground">{review.date}</p>
+    <>
+      <div className="space-y-4 pb-8">
+        {filteredReviews.map((review) => (
+          <Card key={review.id} className="overflow-hidden border-0 shadow-sm">
+            <CardContent className="space-y-3 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <Avatar className="h-10 w-10">
+                    <AvatarFallback className="bg-primary/10 text-sm text-primary">
+                      {review.nickname?.[0] ?? "유"}
+                    </AvatarFallback>
+                  </Avatar>
+
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-foreground">
+                      {review.nickname}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {formatRelativeTime(review.createdAt)}
+                    </p>
+                  </div>
+                </div>
+
+                <StarRating rating={review.rating} />
+              </div>
+
+              <Badge variant="secondary" className="gap-1 text-xs">
+                {review.walkSpotName}
+              </Badge>
+
+              <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
+                {review.content}
+              </p>
+
+              <div className="flex items-center justify-between gap-2 pt-1">
+                <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                  <MessageCircle className="h-4 w-4" />
+                  <span>리뷰</span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="gap-1"
+                    onClick={() => openEditDialog(review)}
+                  >
+                    <Pencil className="h-4 w-4" />
+                    수정
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="gap-1 text-red-500 hover:text-red-500"
+                    onClick={() => handleDeleteReview(review.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    삭제
+                  </Button>
                 </div>
               </div>
-              <StarRating rating={review.rating} />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <Dialog
+        open={!!editingReview}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditingReview(null)
+            setEditRating(5)
+            setEditContent("")
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>리뷰 수정</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 pt-4">
+            <div className="rounded-xl bg-secondary/50 p-3 text-sm">
+              <p className="font-medium text-foreground">
+                장소: {editingReview?.walkSpotName}
+              </p>
+              <p className="mt-1 text-muted-foreground">
+                같은 장소에 대한 리뷰 내용만 수정합니다.
+              </p>
             </div>
 
-            <Badge variant="secondary" className="gap-1 text-xs">
-              {review.location}
-            </Badge>
-
-            <p className="text-sm text-foreground leading-relaxed">{review.content}</p>
-
-            {review.image && (
-              <div className="rounded-xl overflow-hidden">
-                <img
-                  src={review.image}
-                  alt={review.location}
-                  className="w-full h-48 object-cover"
-                />
-              </div>
-            )}
-
-            <div className="flex items-center gap-4 pt-2 text-sm text-muted-foreground">
-              <button className="flex items-center gap-1 hover:text-primary transition-colors">
-                <Heart className="w-4 h-4" />
-                <span>{review.likes}</span>
-              </button>
-              <button className="flex items-center gap-1 hover:text-primary transition-colors">
-                <MessageCircle className="w-4 h-4" />
-                <span>{review.comments}</span>
-              </button>
+            <div className="space-y-2">
+              <p className="text-sm font-medium">별점</p>
+              <StarRating
+                rating={editRating}
+                onChange={setEditRating}
+                editable
+              />
             </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+
+            <Textarea
+              placeholder="리뷰 내용을 수정해주세요"
+              rows={4}
+              value={editContent}
+              onChange={(e) => setEditContent(e.target.value)}
+            />
+
+            <Button
+              className="w-full"
+              onClick={handleUpdateReview}
+              disabled={submitting}
+            >
+              {submitting ? "수정 중..." : "수정 완료"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

@@ -1,58 +1,17 @@
-import { Star, Heart, MessageCircle, User } from "lucide-react"
+"use client"
+
+import { useEffect, useMemo, useState } from "react"
+import { Star, MessageCircle } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
+import { getCommunityReviews, type ReviewResponse } from "@/lib/api"
 
-const reviews = [
-  {
-    id: 1,
-    author: "산책러123",
-    avatar: "S",
-    location: "올림픽공원 평화의광장",
-    rating: 5,
-    content: "넓은 잔디밭에서 여유롭게 산책하기 좋아요. 주말에는 사람이 많지만 평일 저녁에는 한산해서 좋습니다. 반려견 산책하기에도 최고!",
-    likes: 24,
-    comments: 5,
-    date: "2시간 전",
-    image: "https://images.unsplash.com/photo-1588714477688-cf28a50e94f7?w=400&h=250&fit=crop",
-  },
-  {
-    id: 2,
-    author: "건강한하루",
-    avatar: "건",
-    location: "한강 반포공원",
-    rating: 4,
-    content: "야경이 정말 예쁜 곳이에요. 특히 반포대교 달빛무지개분수가 가동되는 시간에 가면 좋습니다. 자전거 타는 사람이 많아서 조금 주의해야 해요.",
-    likes: 18,
-    comments: 3,
-    date: "5시간 전",
-    image: "https://images.unsplash.com/photo-1548115184-bc6544d06a58?w=400&h=250&fit=crop",
-  },
-  {
-    id: 3,
-    author: "서울탐험가",
-    avatar: "서",
-    location: "남산 둘레길",
-    rating: 5,
-    content: "서울 도심에서 자연을 느낄 수 있는 최고의 장소입니다. 경사가 있어서 운동 효과도 좋고, 공기가 맑아서 건강에도 좋아요.",
-    likes: 32,
-    comments: 8,
-    date: "1일 전",
-    image: null,
-  },
-  {
-    id: 4,
-    author: "아침산책",
-    avatar: "아",
-    location: "서울숲",
-    rating: 4,
-    content: "사슴도 볼 수 있고, 넓은 공원에서 피크닉하기 좋습니다. 다만 주말에는 너무 붐벼서 평일 방문을 추천드립니다.",
-    likes: 15,
-    comments: 2,
-    date: "2일 전",
-    image: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=250&fit=crop",
-  },
-]
+type ReviewListProps = {
+  searchKeyword: string
+  filter: string
+  refreshKey: number
+}
 
 function StarRating({ rating }: { rating: number }) {
   return (
@@ -61,7 +20,9 @@ function StarRating({ rating }: { rating: number }) {
         <Star
           key={star}
           className={`w-4 h-4 ${
-            star <= rating ? "fill-amber-400 text-amber-400" : "text-muted-foreground/30"
+            star <= rating
+              ? "fill-amber-400 text-amber-400"
+              : "text-muted-foreground/30"
           }`}
         />
       ))}
@@ -69,52 +30,138 @@ function StarRating({ rating }: { rating: number }) {
   )
 }
 
-export function ReviewList() {
+function formatRelativeTime(dateString: string) {
+  const date = new Date(dateString)
+  if (Number.isNaN(date.getTime())) return "-"
+
+  const now = new Date()
+  const diffSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
+
+  if (diffSeconds < 60) return "방금 전"
+  if (diffSeconds < 3600) return `${Math.floor(diffSeconds / 60)}분 전`
+  if (diffSeconds < 86400) return `${Math.floor(diffSeconds / 3600)}시간 전`
+  if (diffSeconds < 604800) return `${Math.floor(diffSeconds / 86400)}일 전`
+
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, "0")
+  const day = String(date.getDate()).padStart(2, "0")
+  return `${year}.${month}.${day}`
+}
+
+export function ReviewList({
+  searchKeyword,
+  filter,
+  refreshKey,
+}: ReviewListProps) {
+  const [reviews, setReviews] = useState<ReviewResponse[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        setLoading(true)
+        setError("")
+        const data = await getCommunityReviews()
+        setReviews(data)
+      } catch (err) {
+        console.error("커뮤니티 리뷰 조회 실패:", err)
+        setError("리뷰를 불러오지 못했습니다.")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchReviews()
+  }, [refreshKey])
+
+  const filteredReviews = useMemo(() => {
+    const keyword = searchKeyword.trim().toLowerCase()
+    let next = [...reviews]
+
+    if (keyword) {
+      next = next.filter((review) => {
+        const place = review.walkSpotName?.toLowerCase() ?? ""
+        const content = review.content?.toLowerCase() ?? ""
+        const nickname = review.nickname?.toLowerCase() ?? ""
+
+        return (
+          place.includes(keyword) ||
+          content.includes(keyword) ||
+          nickname.includes(keyword)
+        )
+      })
+    }
+
+    if (filter === "별점순") {
+      next.sort((a, b) => b.rating - a.rating)
+    } else {
+      next.sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )
+    }
+
+    return next
+  }, [reviews, searchKeyword, filter])
+
+  if (loading) {
+    return (
+      <div className="py-12 text-center text-sm text-muted-foreground">
+        리뷰를 불러오는 중...
+      </div>
+    )
+  }
+
+  if (error) {
+    return <div className="py-12 text-center text-sm text-red-500">{error}</div>
+  }
+
+  if (filteredReviews.length === 0) {
+    return (
+      <div className="py-12 text-center text-sm text-muted-foreground">
+        리뷰가 없습니다.
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-4 pb-8">
-      {reviews.map((review) => (
+      {filteredReviews.map((review) => (
         <Card key={review.id} className="border-0 shadow-sm overflow-hidden">
           <CardContent className="p-4 space-y-3">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
                 <Avatar className="w-10 h-10">
                   <AvatarFallback className="bg-primary/10 text-primary text-sm">
-                    {review.avatar}
+                    {review.nickname?.[0] ?? "유"}
                   </AvatarFallback>
                 </Avatar>
-                <div>
-                  <p className="font-medium text-foreground text-sm">{review.author}</p>
-                  <p className="text-xs text-muted-foreground">{review.date}</p>
+
+                <div className="min-w-0">
+                  <p className="font-medium text-foreground text-sm truncate">
+                    {review.nickname}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {formatRelativeTime(review.createdAt)}
+                  </p>
                 </div>
               </div>
+
               <StarRating rating={review.rating} />
             </div>
 
             <Badge variant="secondary" className="gap-1 text-xs">
-              {review.location}
+              {review.walkSpotName}
             </Badge>
 
-            <p className="text-sm text-foreground leading-relaxed">{review.content}</p>
+            <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+              {review.content}
+            </p>
 
-            {review.image && (
-              <div className="rounded-xl overflow-hidden">
-                <img
-                  src={review.image}
-                  alt={review.location}
-                  className="w-full h-48 object-cover"
-                />
-              </div>
-            )}
-
-            <div className="flex items-center gap-4 pt-2 text-sm text-muted-foreground">
-              <button className="flex items-center gap-1 hover:text-primary transition-colors">
-                <Heart className="w-4 h-4" />
-                <span>{review.likes}</span>
-              </button>
-              <button className="flex items-center gap-1 hover:text-primary transition-colors">
-                <MessageCircle className="w-4 h-4" />
-                <span>{review.comments}</span>
-              </button>
+            <div className="flex items-center gap-1 pt-1 text-sm text-muted-foreground">
+              <MessageCircle className="w-4 h-4" />
+              <span>리뷰</span>
             </div>
           </CardContent>
         </Card>

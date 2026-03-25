@@ -5,6 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import axios from "axios"
 
 export function UserSettings() {
+  const settingsItems = [
+    { icon: Bell, label: "알림 설정", href: "#" },
+    { icon: Shield, label: "개인정보 보호", href: "#" },
+    { icon: HelpCircle, label: "도움말", href: "#" },
+  ];
+
   const handleLogout = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -20,7 +26,7 @@ export function UserSettings() {
         }
       });
     } catch (error) {
-
+      // 에러 발생 시에도 클라이언트 데이터 정리를 위해 비워둠
     } finally {
       localStorage.clear();
       sessionStorage.clear();
@@ -40,13 +46,18 @@ export function UserSettings() {
       </CardHeader>
       
       <CardContent className="space-y-1 px-6">
-        <div className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer group">
-           <div className="flex items-center gap-3">
-             <Bell className="w-5 h-5 text-slate-400" />
-             <span className="text-sm text-slate-600 font-medium">알림 설정</span>
-           </div>
-           <ChevronRight className="w-4 h-4 text-slate-300" />
-        </div>
+        {settingsItems.map((item, index) => (
+          <div 
+            key={index}
+            className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer group"
+          >
+            <div className="flex items-center gap-3">
+              <item.icon className="w-5 h-5 text-slate-400" />
+              <span className="text-sm text-slate-600 font-medium">{item.label}</span>
+            </div>
+            <ChevronRight className="w-4 h-4 text-slate-300" />
+          </div>
+        ))}
 
         <button 
           type="button"

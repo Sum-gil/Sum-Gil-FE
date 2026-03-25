@@ -48,12 +48,8 @@ export async function kakaoSocialLogin(code: string): Promise<TokenResponse> {
 }
 
 export async function logout(): Promise<string> {
-  const token = localStorage.getItem("accessToken");
   return apiFetch<string>("/api/auth/logout", {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`, // 토큰 강제 주입
-    },
   })
 }
 

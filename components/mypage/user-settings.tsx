@@ -26,7 +26,7 @@ export function UserSettings() {
         }
       });
     } catch (error) {
-      // 에러 발생 시에도 클라이언트 데이터 정리를 위해 비워둠
+      
     } finally {
       localStorage.clear();
       sessionStorage.clear();
@@ -52,10 +52,14 @@ export function UserSettings() {
             className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer group"
           >
             <div className="flex items-center gap-3">
-              <item.icon className="w-5 h-5 text-slate-400" />
-              <span className="text-sm text-slate-600 font-medium">{item.label}</span>
+              <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center group-hover:bg-white group-hover:shadow-sm transition-all">
+                <item.icon className="w-4 h-4 text-slate-500" />
+              </div>
+              <span className="text-sm font-medium text-slate-600 group-hover:text-slate-900">
+                {item.label}
+              </span>
             </div>
-            <ChevronRight className="w-4 h-4 text-slate-300" />
+            <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-slate-500 transition-transform group-hover:translate-x-0.5" />
           </div>
         ))}
 
@@ -65,10 +69,12 @@ export function UserSettings() {
           className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-rose-50 transition-colors mt-4 group border border-transparent hover:border-rose-100 outline-none"
         >
           <div className="flex items-center gap-3">
-            <div className="p-1.5 rounded-lg bg-rose-100 text-rose-500 group-hover:bg-rose-500 group-hover:text-white transition-colors">
+            <div className="w-8 h-8 rounded-lg bg-rose-100 text-rose-500 group-hover:bg-rose-500 group-hover:text-white transition-colors flex items-center justify-center">
               <LogOut className="w-4 h-4" />
             </div>
-            <span className="text-sm font-bold text-rose-500 group-hover:text-rose-600">로그아웃</span>
+            <span className="text-sm font-bold text-rose-500 group-hover:text-rose-600">
+              로그아웃
+            </span>
           </div>
           <ChevronRight className="w-4 h-4 text-rose-200 group-hover:text-rose-400" />
         </button>

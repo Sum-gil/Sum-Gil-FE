@@ -35,6 +35,32 @@ type MapViewProps = {
   onSelectPlace: (placeId: number) => void
 }
 
+function getMarkerImage(kakao: any, type: string) {
+  const value = (type || "").toLowerCase()
+
+  let imageSrc = ""
+
+  if (value.includes("카페") || value.includes("cafe")) {
+    imageSrc =
+      "https://cdn-icons-png.flaticon.com/512/751/751621.png" // 커피
+  } else if (value.includes("편의점") || value.includes("store")) {
+    imageSrc =
+      "https://cdn-icons-png.flaticon.com/512/3081/3081559.png" // 편의점
+  } else if (value.includes("화장실") || value.includes("toilet")) {
+    imageSrc =
+      "https://cdn-icons-png.flaticon.com/512/684/684908.png" // 화장실
+  } else {
+    imageSrc =
+      "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png"
+  }
+
+  return new kakao.maps.MarkerImage(
+    imageSrc,
+    new kakao.maps.Size(40, 40),
+    { offset: new kakao.maps.Point(20, 40) }
+  )
+}
+
 export function MapView({
   places,
   infrastructures,
@@ -151,12 +177,12 @@ export function MapView({
     infraMarkersRef.current = []
 
     infrastructures.forEach((infra) => {
-      const markerPosition = new kakao.maps.LatLng(infra.latitude, infra.longitude)
-
-      const markerImage = new kakao.maps.MarkerImage(
-        "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png",
-        new kakao.maps.Size(24, 35)
+      const markerPosition = new kakao.maps.LatLng(
+        infra.latitude,
+        infra.longitude
       )
+
+      const markerImage = getMarkerImage(kakao, infra.type)
 
       const marker = new kakao.maps.Marker({
         map,
@@ -219,30 +245,15 @@ export function MapView({
       <div ref={mapContainerRef} className="absolute inset-0" />
 
       <div className="absolute top-4 right-4 flex flex-col gap-2 z-10">
-        <Button
-          variant="secondary"
-          size="icon"
-          className="shadow-lg bg-card"
-          onClick={handleZoomIn}
-        >
+        <Button variant="secondary" size="icon" onClick={handleZoomIn}>
           <Plus className="w-4 h-4" />
         </Button>
 
-        <Button
-          variant="secondary"
-          size="icon"
-          className="shadow-lg bg-card"
-          onClick={handleZoomOut}
-        >
+        <Button variant="secondary" size="icon" onClick={handleZoomOut}>
           <Minus className="w-4 h-4" />
         </Button>
 
-        <Button
-          variant="secondary"
-          size="icon"
-          className="shadow-lg bg-card"
-          onClick={handleMoveToCurrentLocation}
-        >
+        <Button variant="secondary" size="icon" onClick={handleMoveToCurrentLocation}>
           <Locate className="w-4 h-4" />
         </Button>
       </div>

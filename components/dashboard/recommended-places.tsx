@@ -90,9 +90,12 @@ export function RecommendedPlaces({
                   <Card className="overflow-hidden border-0 shadow-sm hover:shadow-md transition-shadow cursor-pointer group">
                     <div className="relative h-40 overflow-hidden">
                       <img
-                        src={place.image || "/placeholder.jpg"}
+                        src={place.image || "/images/places/place1.jpg"}
                         alt={placeName}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                          e.currentTarget.src = "/images/places/place1.jpg"
+                        }}
                       />
 
                       {isAiMode && (

@@ -33,8 +33,6 @@ export default function MapPage() {
   const [infrastructures, setInfrastructures] = useState<InfrastructureItem[]>([])
   const [loading, setLoading] = useState(true)
 
-  // 지금은 지정 좌표를 현재 위치처럼 사용
-  // 나중에 실제 현재 위치로 바꾸려면 여기만 navigator.geolocation으로 변경하면 됨
   const latitude = 37.5665
   const longitude = 126.978
   const radius = 3000
@@ -108,23 +106,25 @@ export default function MapPage() {
   )
 
   return (
-    <div className="flex flex-col lg:flex-row h-[calc(100vh-4rem)]">
-      <PlaceListPanel
-        places={places}
-        selectedPlaceId={selectedPlaceId}
-        onSelectPlace={setSelectedPlaceId}
-        loading={loading}
-        currentPosition={{ latitude, longitude }}
-      />
+    <div className="h-[calc(100vh-4rem)] overflow-hidden">
+      <div className="flex h-full flex-col lg:flex-row">
+        <PlaceListPanel
+          places={places}
+          selectedPlaceId={selectedPlaceId}
+          onSelectPlace={setSelectedPlaceId}
+          loading={loading}
+          currentPosition={{ latitude, longitude }}
+        />
 
-      <MapView
-        places={places}
-        infrastructures={infrastructures}
-        selectedPlaceId={selectedPlaceId}
-        selectedPlace={selectedPlace}
-        currentPosition={{ latitude, longitude }}
-        onSelectPlace={setSelectedPlaceId}
-      />
+        <MapView
+          places={places}
+          infrastructures={infrastructures}
+          selectedPlaceId={selectedPlaceId}
+          selectedPlace={selectedPlace}
+          currentPosition={{ latitude, longitude }}
+          onSelectPlace={setSelectedPlaceId}
+        />
+      </div>
     </div>
   )
 }

@@ -75,78 +75,89 @@ export function RecommendedPlaces({
             : "표시할 추천 장소가 없습니다."}
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {places.map((place, index) => {
-            const placeId = place.placeId ?? place.id ?? index
-            const placeName = place.name ?? place.placeName ?? "이름 없음"
+        <div className="overflow-x-auto pb-2">
+          <div className="flex gap-4 min-w-max">
+            {places.map((place, index) => {
+              const placeId = place.placeId ?? place.id ?? index
+              const placeName = place.name ?? place.placeName ?? "이름 없음"
 
-            return (
-              <Link key={placeId} href={`/place/${placeId}`}>
-                <Card className="overflow-hidden border-0 shadow-sm hover:shadow-md transition-shadow cursor-pointer group">
-                  <div className="relative h-40 overflow-hidden">
-                    <img
-                      src={place.image || "/placeholder.jpg"}
-                      alt={placeName}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
+              return (
+                <Link
+                  key={placeId}
+                  href={`/place/${placeId}`}
+                  className="w-[260px] flex-shrink-0"
+                >
+                  <Card className="overflow-hidden border-0 shadow-sm hover:shadow-md transition-shadow cursor-pointer group">
+                    <div className="relative h-40 overflow-hidden">
+                      <img
+                        src={place.image || "/placeholder.jpg"}
+                        alt={placeName}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
 
-                    {isAiMode && (
-                      <div className="absolute top-3 right-3">
-                        <Badge
-                          variant="secondary"
-                          className="bg-background/80 backdrop-blur text-xs"
-                        >
-                          AI 추천
-                        </Badge>
-                      </div>
-                    )}
-                  </div>
-
-                  <CardContent className="p-4 space-y-3">
-                    <h3 className="font-semibold text-foreground">{placeName}</h3>
-
-                    <p className="text-sm text-muted-foreground line-clamp-2">
-                      {place.address || place.description || "설명 없음"}
-                    </p>
-
-                    <div className="flex items-center gap-4 text-sm">
-                      {place.healthScore !== undefined && (
-                        <div className="flex items-center gap-1 text-primary">
-                          <Heart className="w-4 h-4" />
-                          <span className="font-medium">{place.healthScore}점</span>
-                        </div>
-                      )}
-
-                      {place.safetyScore !== undefined && (
-                        <div className="flex items-center gap-1 text-primary">
-                          <Shield className="w-4 h-4" />
-                          <span className="font-medium">{place.safetyScore}</span>
+                      {isAiMode && (
+                        <div className="absolute top-3 right-3">
+                          <Badge
+                            variant="secondary"
+                            className="bg-background/80 backdrop-blur text-xs"
+                          >
+                            AI 추천
+                          </Badge>
                         </div>
                       )}
                     </div>
 
-                    {place.distance !== undefined && (
-                      <p className="text-xs text-muted-foreground">
-                        거리: {Math.round(place.distance)}m
-                      </p>
-                    )}
+                    <CardContent className="p-4 space-y-3">
+                      <h3 className="font-semibold text-foreground">{placeName}</h3>
 
-                    {isAiMode && place.reason && (
-                      <p className="text-sm text-foreground line-clamp-3">
-                        {place.reason}
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {place.address || place.description || "설명 없음"}
                       </p>
-                    )}
 
-                    {isAiMode && place.recommendationScore !== undefined && (
-                      <p className="text-xs text-muted-foreground">
-                        추천 점수: {place.recommendationScore}
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
-              </Link>
-            )
-          })}
+                      <div className="flex items-center gap-4 text-sm">
+                        {place.healthScore !== undefined && (
+                          <div className="flex items-center gap-1 text-primary">
+                            <Heart className="w-4 h-4" />
+                            <span className="font-medium">
+                              {place.healthScore}점
+                            </span>
+                          </div>
+                        )}
+
+                        {place.safetyScore !== undefined && (
+                          <div className="flex items-center gap-1 text-primary">
+                            <Shield className="w-4 h-4" />
+                            <span className="font-medium">
+                              {place.safetyScore}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {place.distance !== undefined && (
+                        <p className="text-xs text-muted-foreground">
+                          거리: {Math.round(place.distance)}m
+                        </p>
+                      )}
+
+                      {isAiMode && place.reason && (
+                        <p className="text-sm text-foreground line-clamp-3">
+                          {place.reason}
+                        </p>
+                      )}
+
+                      {isAiMode &&
+                        place.recommendationScore !== undefined && (
+                          <p className="text-xs text-muted-foreground">
+                            추천 점수: {place.recommendationScore}
+                          </p>
+                        )}
+                    </CardContent>
+                  </Card>
+                </Link>
+              )
+            })}
+          </div>
         </div>
       )}
     </section>

@@ -21,6 +21,40 @@ type DefaultPlace = {
   image?: string
 }
 
+const fallbackImages = [
+  "/images/places/place1.jpg",
+  "/images/places/place2.jpg",
+  "/images/places/place3.jpg",
+  "/images/places/place4.jpg",
+  "/images/places/place5.jpg",
+]
+
+function shuffleArray<T>(array: T[]) {
+  const newArray = [...array]
+
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[newArray[i], newArray[j]] = [newArray[j], newArray[i]]
+  }
+
+  return newArray
+}
+
+function assignRandomImages(places: any[]) {
+  const shuffled = shuffleArray(fallbackImages)
+
+  return places.map((place, index) => {
+    if (place.image && place.image.trim() !== "") {
+      return place
+    }
+
+    return {
+      ...place,
+      image: shuffled[index % shuffled.length],
+    }
+  })
+}
+
 export default function DashboardPage() {
   const [query, setQuery] = useState("")
   const [places, setPlaces] = useState<(DefaultPlace | RecommendedPlace)[]>([])
@@ -44,7 +78,7 @@ export default function DashboardPage() {
         `/api/places?latitude=${latitude}&longitude=${longitude}&radius=${radius}`
       )
 
-      setPlaces(data)
+      setPlaces(assignRandomImages(data))
     } catch (err: any) {
       setError(err.message || "추천 장소를 불러오지 못했습니다.")
       setPlaces([])
@@ -70,7 +104,7 @@ export default function DashboardPage() {
         radius
       )
 
-      setPlaces(response.recommendations)
+      setPlaces(assignRandomImages(response.recommendations))
       setSummary(response.summary)
       setIsAiMode(true)
     } catch (err: any) {

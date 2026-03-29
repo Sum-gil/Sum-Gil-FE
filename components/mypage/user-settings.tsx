@@ -2,13 +2,14 @@
 
 import { Settings, Bell, Shield, HelpCircle, LogOut, ChevronRight } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import Link from "next/link"
 import axios from "axios"
 
 export function UserSettings() {
   const settingsItems = [
     { icon: Bell, label: "알림 설정", href: "#" },
-    { icon: Shield, label: "개인정보 보호", href: "#" },
-    { icon: HelpCircle, label: "도움말", href: "#" },
+    { icon: Shield, label: "개인정보 보호", href: "/settings/privacy" },
+    { icon: HelpCircle, label: "도움말", href: "/settings/help" },
   ];
 
   const handleLogout = async (e: React.MouseEvent) => {
@@ -18,19 +19,19 @@ export function UserSettings() {
     if (!confirm("로그아웃 하시겠습니까?")) return;
 
     const token = localStorage.getItem("accessToken");
-    
+
     try {
       await axios.post("http://localhost:8080/api/auth/logout", {}, {
-        headers: { 
-          Authorization: `Bearer ${token}` 
+        headers: {
+          Authorization: `Bearer ${token}`
         }
       });
     } catch (error) {
-      
+
     } finally {
       localStorage.clear();
       sessionStorage.clear();
-      
+
       alert("로그아웃 되었습니다.");
       window.location.href = "/login";
     }
@@ -44,12 +45,14 @@ export function UserSettings() {
           <CardTitle className="text-base font-bold text-slate-800">설정</CardTitle>
         </div>
       </CardHeader>
-      
+
       <CardContent className="space-y-1 px-6">
         {settingsItems.map((item, index) => (
-          <div 
+          /* ✅ 수정: 기존 <div>를 <Link>로 변경하여 클릭 시 실제 페이지 이동이 일어나도록 처리 */
+          <Link
             key={index}
-            className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer group"
+            href={item.href}
+            className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 transition-colors group cursor-pointer"
           >
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center group-hover:bg-white group-hover:shadow-sm transition-all">
@@ -60,15 +63,16 @@ export function UserSettings() {
               </span>
             </div>
             <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-slate-500 transition-transform group-hover:translate-x-0.5" />
-          </div>
+          </Link>
         ))}
 
-        <button 
+        <button
           type="button"
           onClick={handleLogout}
           className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-rose-50 transition-colors mt-4 group border border-transparent hover:border-rose-100 outline-none"
         >
           <div className="flex items-center gap-3">
+            {/* ✅ 수정: 아이콘이 상단에 치우치지 않도록 'flex items-center justify-center' 추가하여 정중앙 정렬 */}
             <div className="w-8 h-8 rounded-lg bg-rose-100 text-rose-500 group-hover:bg-rose-500 group-hover:text-white transition-colors flex items-center justify-center">
               <LogOut className="w-4 h-4" />
             </div>

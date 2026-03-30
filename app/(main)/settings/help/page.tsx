@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { HelpCircle, ChevronLeft, ChevronDown, MessageCircle, FileText } from "lucide-react"
 import Link from "next/link"
-import { cn } from "@/lib/utils" // Shadcn UI 기본 유틸 함수
+import { cn } from "@/lib/utils" 
 
 export default function HelpPage() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
@@ -33,13 +33,11 @@ export default function HelpPage() {
 
   return (
     <div className="max-w-2xl mx-auto p-6 space-y-8">
-      {/* 상단 네비게이션 */}
       <Link href="/mypage" className="inline-flex items-center gap-2 text-slate-500 hover:text-slate-800 transition-colors">
         <ChevronLeft className="w-5 h-5" />
         <span className="text-sm font-medium">뒤로가기</span>
       </Link>
 
-      {/* 헤더 섹션 */}
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <HelpCircle className="w-6 h-6 text-emerald-500" />
@@ -48,7 +46,6 @@ export default function HelpPage() {
         <p className="text-slate-500 text-sm">궁금하신 내용을 빠르게 찾아보세요.</p>
       </div>
 
-      {/* FAQ 아코디언 리스트 */}
       <div className="space-y-3">
         <h2 className="text-sm font-bold text-slate-400 px-1 uppercase tracking-wider">자주 묻는 질문</h2>
         <div className="grid gap-2">
@@ -76,7 +73,6 @@ export default function HelpPage() {
                 )} />
               </button>
               
-              {/* 답변 영역 (애니메이션 효과) */}
               <div className={cn(
                 "overflow-hidden transition-all duration-300 ease-in-out",
                 openIndex === i ? "max-h-40 opacity-100" : "max-h-0 opacity-0"
@@ -90,7 +86,6 @@ export default function HelpPage() {
         </div>
       </div>
 
-      {/* 하단 추가 문의 섹션 */}
       <div className="bg-emerald-50 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="space-y-1 text-center md:text-left">
           <h3 className="font-bold text-emerald-900 text-sm">해결되지 않았나요?</h3>

@@ -7,7 +7,7 @@ import axios from "axios"
 
 export function UserSettings() {
   const settingsItems = [
-    { icon: Bell, label: "알림 설정", href: "#" },
+    { icon: Bell, label: "알림 설정", href: "/settings/notifications" },
     { icon: Shield, label: "개인정보 보호", href: "/settings/privacy" },
     { icon: HelpCircle, label: "도움말", href: "/settings/help" },
   ];
@@ -48,7 +48,6 @@ export function UserSettings() {
 
       <CardContent className="space-y-1 px-6">
         {settingsItems.map((item, index) => (
-          /* ✅ 수정: 기존 <div>를 <Link>로 변경하여 클릭 시 실제 페이지 이동이 일어나도록 처리 */
           <Link
             key={index}
             href={item.href}
@@ -72,7 +71,6 @@ export function UserSettings() {
           className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-rose-50 transition-colors mt-4 group border border-transparent hover:border-rose-100 outline-none"
         >
           <div className="flex items-center gap-3">
-            {/* ✅ 수정: 아이콘이 상단에 치우치지 않도록 'flex items-center justify-center' 추가하여 정중앙 정렬 */}
             <div className="w-8 h-8 rounded-lg bg-rose-100 text-rose-500 group-hover:bg-rose-500 group-hover:text-white transition-colors flex items-center justify-center">
               <LogOut className="w-4 h-4" />
             </div>

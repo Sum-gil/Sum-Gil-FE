@@ -28,6 +28,25 @@ function KakaoCallbackInner() {
           localStorage.setItem("userId", String(data.userId))
         }
 
+        try {
+          const { getFcmToken } = await import("@/lib/fcm")
+
+          const token = await getFcmToken()
+
+          if (token) {
+            await fetch("http://localhost:8080/api/users/me/fcm-token", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${data.accessToken}`,
+              },
+              body: JSON.stringify({ token }),
+            })
+          }
+        } catch (e) {
+          console.log("FCM 토큰 저장 실패", e)
+        }        
+
         router.replace("/dashboard")
       } catch (error) {
         console.error("카카오 로그인 실패:", error)

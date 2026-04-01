@@ -1,4 +1,5 @@
 import { Header } from "@/components/shared/header"
+import { FcmForegroundListener } from "@/components/records/fcm-foreground-listener"
 
 export default function MainLayout({
   children,
@@ -8,6 +9,9 @@ export default function MainLayout({
   return (
     <div className="min-h-screen bg-background">
       <Header />
+
+      <FcmForegroundListener />
+
       <main>{children}</main>
     </div>
   )

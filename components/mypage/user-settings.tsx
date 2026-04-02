@@ -5,37 +5,43 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import Link from "next/link"
 import axios from "axios"
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL
+
 export function UserSettings() {
   const settingsItems = [
     { icon: Bell, label: "알림 설정", href: "/settings/notifications" },
     { icon: Shield, label: "개인정보 보호", href: "/settings/privacy" },
     { icon: HelpCircle, label: "도움말", href: "/settings/help" },
-  ];
+  ]
 
   const handleLogout = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+    e.preventDefault()
+    e.stopPropagation()
 
-    if (!confirm("로그아웃 하시겠습니까?")) return;
+    if (!confirm("로그아웃 하시겠습니까?")) return
 
-    const token = localStorage.getItem("accessToken");
+    const token = localStorage.getItem("accessToken")
 
     try {
-      await axios.post("http://localhost:8080/api/auth/logout", {}, {
-        headers: {
-          Authorization: `Bearer ${token}`
+      await axios.post(
+        `${API_BASE}/api/auth/logout`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-      });
+      )
     } catch (error) {
-
+      // 실패해도 로그아웃 진행
     } finally {
-      localStorage.clear();
-      sessionStorage.clear();
+      localStorage.clear()
+      sessionStorage.clear()
 
-      alert("로그아웃 되었습니다.");
-      window.location.href = "/login";
+      alert("로그아웃 되었습니다.")
+      window.location.href = "/login"
     }
-  };
+  }
 
   return (
     <Card className="border-0 shadow-sm pb-4 bg-white">

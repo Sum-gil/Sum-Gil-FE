@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button"
 import { startWalk } from "@/lib/api"
 import axios from "axios"
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL
+
 interface PlaceActionsProps {
   placeId: string
 }
@@ -23,10 +25,10 @@ export function PlaceActions({ placeId }: PlaceActionsProps) {
         const token = localStorage.getItem("accessToken")
         if (!token) return
 
-        const res = await axios.get("http://localhost:8080/api/favorites", {
+        const res = await axios.get(`${API_BASE}/api/favorites`, {
           headers: { Authorization: `Bearer ${token}` }
         })
-        
+
         const existing = res.data.find((f: any) => f.walkSpotId === Number(placeId))
         if (existing) {
           setIsFavorite(true)
@@ -45,18 +47,19 @@ export function PlaceActions({ placeId }: PlaceActionsProps) {
       if (!token) return alert("로그인이 필요합니다.")
 
       if (isFavorite && favoriteId) {
-        await axios.delete(`http://localhost:8080/api/favorites/${favoriteId}`, {
+        await axios.delete(`${API_BASE}/api/favorites/${favoriteId}`, {
           headers: { Authorization: `Bearer ${token}` }
         })
         setIsFavorite(false)
         setFavoriteId(null)
       } else {
-        const res = await axios.post("http://localhost:8080/api/favorites", 
+        const res = await axios.post(
+          `${API_BASE}/api/favorites`,
           { walkSpotId: Number(placeId) },
           { headers: { Authorization: `Bearer ${token}` } }
         )
         setIsFavorite(true)
-        setFavoriteId(res.data) 
+        setFavoriteId(res.data)
       }
     } catch (error) {
       console.error(error)
@@ -97,8 +100,8 @@ export function PlaceActions({ placeId }: PlaceActionsProps) {
       <Button
         variant="outline"
         size="icon"
-        className={`h-12 w-12 ${isFavorite ? "bg-rose-50 border-rose-100" : ""}`} 
-        onClick={handleFavoriteToggle} 
+        className={`h-12 w-12 ${isFavorite ? "bg-rose-50 border-rose-100" : ""}`}
+        onClick={handleFavoriteToggle}
       >
         <Heart
           className={`w-5 h-5 ${

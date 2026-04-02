@@ -17,7 +17,7 @@ interface WalkingTrackerProps {
   placeId: number | null
 }
 
-const API_BASE = "http://localhost:8080/api/places"
+const API_BASE = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/places`
 
 export function WalkingTracker({
   walkRecordId,

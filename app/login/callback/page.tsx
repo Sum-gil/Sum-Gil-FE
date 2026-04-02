@@ -4,6 +4,8 @@ import { Suspense, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { kakaoSocialLogin } from "@/lib/api"
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL
+
 function KakaoCallbackInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -34,7 +36,7 @@ function KakaoCallbackInner() {
           const token = await getFcmToken()
 
           if (token) {
-            await fetch("http://localhost:8080/api/users/me/fcm-token", {
+            await fetch(`${API_BASE}/api/users/me/fcm-token`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -45,7 +47,7 @@ function KakaoCallbackInner() {
           }
         } catch (e) {
           console.log("FCM 토큰 저장 실패", e)
-        }        
+        }
 
         router.replace("/dashboard")
       } catch (error) {

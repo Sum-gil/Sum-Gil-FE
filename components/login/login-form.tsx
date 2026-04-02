@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 const KAKAO_CLIENT_ID = "7b143741650a60e74f1769f26c8dc01f"
-const KAKAO_REDIRECT_URI = "http://localhost:3000/login/callback"
+const KAKAO_REDIRECT_URI = "https://sumgil.shop/login/callback"
 
 const KAKAO_AUTH_URL = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_CLIENT_ID}&redirect_uri=${encodeURIComponent(
   KAKAO_REDIRECT_URI

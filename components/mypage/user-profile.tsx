@@ -8,6 +8,8 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import axios from "axios"
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL
+
 interface UserProfileProps {
   initialData: {
     nickname: string
@@ -30,10 +32,11 @@ export function UserProfile({ initialData }: UserProfileProps) {
   const handleUpdate = async () => {
     try {
       const token = localStorage.getItem("accessToken")
-      const response = await axios.patch("http://localhost:8080/api/users/me", 
-        { 
-          nickname: tempProfile.nickname, 
-          interestRegion: tempProfile.interestRegion 
+      const response = await axios.patch(
+        `${API_BASE}/api/users/me`,
+        {
+          nickname: tempProfile.nickname,
+          interestRegion: tempProfile.interestRegion,
         },
         { headers: { Authorization: `Bearer ${token}` } }
       )
@@ -47,7 +50,7 @@ export function UserProfile({ initialData }: UserProfileProps) {
   return (
     <Card className="border-0 shadow-sm overflow-hidden bg-white">
       <div className="h-24 bg-gradient-to-r from-emerald-400 to-cyan-400" />
-      
+
       <CardContent className="relative pt-0 pb-6 px-6">
         <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4 -mt-10">
           <Avatar className="w-20 h-20 border-4 border-white shadow-md bg-white">
@@ -55,21 +58,28 @@ export function UserProfile({ initialData }: UserProfileProps) {
               {profile.nickname ? profile.nickname[0] : "이"}
             </AvatarFallback>
           </Avatar>
-          
+
           <div className="flex-1 text-center sm:text-left">
             {isEditing ? (
               <div className="pt-12 sm:pt-10 space-y-3 pb-2">
-                <Input 
-                  value={tempProfile.nickname} 
-                  onChange={(e) => setTempProfile({...tempProfile, nickname: e.target.value})}
+                <Input
+                  value={tempProfile.nickname}
+                  onChange={(e) =>
+                    setTempProfile({ ...tempProfile, nickname: e.target.value })
+                  }
                   className="h-9 w-full sm:w-56 bg-slate-50 border-slate-200 focus:ring-emerald-400"
                   placeholder="새 닉네임 입력"
                 />
                 <div className="relative">
                   <MapPin className="absolute left-2.5 top-2.5 w-4 h-4 text-slate-400" />
-                  <Input 
-                    value={tempProfile.interestRegion} 
-                    onChange={(e) => setTempProfile({...tempProfile, interestRegion: e.target.value})}
+                  <Input
+                    value={tempProfile.interestRegion}
+                    onChange={(e) =>
+                      setTempProfile({
+                        ...tempProfile,
+                        interestRegion: e.target.value,
+                      })
+                    }
                     className="h-9 w-full sm:w-64 pl-9 bg-slate-50 border-slate-200 focus:ring-emerald-400"
                     placeholder="관심 지역 (예: 덕양구)"
                   />
@@ -93,15 +103,29 @@ export function UserProfile({ initialData }: UserProfileProps) {
           <div className="flex gap-2 pb-1">
             {isEditing ? (
               <>
-                <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)} className="text-slate-400 hover:bg-slate-100">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsEditing(false)}
+                  className="text-slate-400 hover:bg-slate-100"
+                >
                   <X className="w-4 h-4 mr-1" /> 취소
                 </Button>
-                <Button size="sm" onClick={handleUpdate} className="bg-emerald-500 hover:bg-emerald-600 text-white shadow-sm px-4">
+                <Button
+                  size="sm"
+                  onClick={handleUpdate}
+                  className="bg-emerald-500 hover:bg-emerald-600 text-white shadow-sm px-4"
+                >
                   <Check className="w-4 h-4 mr-1" /> 저장
                 </Button>
               </>
             ) : (
-              <Button variant="outline" size="sm" onClick={() => setIsEditing(true)} className="gap-1.5 border-slate-200 text-slate-600 hover:bg-slate-50 px-4 shadow-sm">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsEditing(true)}
+                className="gap-1.5 border-slate-200 text-slate-600 hover:bg-slate-50 px-4 shadow-sm"
+              >
                 <Edit2 className="w-3.5 h-3.5 text-slate-400" /> 편집
               </Button>
             )}

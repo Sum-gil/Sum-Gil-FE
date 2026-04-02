@@ -5,6 +5,8 @@ import axios from "axios";
 import { Wind, Thermometer, Droplets, Sun, MapPin, AlertCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+
 interface EnvironmentResponse {
   region: string;
   temperature: number;
@@ -56,8 +58,9 @@ export function EnvironmentCards() {
     const fetchEnvironmentData = async (lat: number, lng: number) => {
       try {
         const token = localStorage.getItem("accessToken");
+
         const response = await axios.get<EnvironmentResponse>(
-          `http://localhost:8080/api/dashboard/environment?lat=${lat}&lng=${lng}`,
+          `${API_BASE}/api/dashboard/environment?lat=${lat}&lng=${lng}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -142,14 +145,16 @@ export function EnvironmentCards() {
                 <div className={`w-9 h-9 md:w-10 md:h-10 rounded-lg flex items-center justify-center shrink-0 ${item.bgColor}`}>
                   <item.icon className={`w-5 h-5 ${item.color}`} />
                 </div>
-                
+
                 <div className="flex flex-col min-w-0">
                   <p className="text-[10px] md:text-xs text-muted-foreground leading-tight">
                     {item.label}
                   </p>
-                  <p className={`font-bold ${item.color} 
+                  <p
+                    className={`font-bold ${item.color} 
                     text-[13px] sm:text-sm md:text-base lg:text-lg
-                    whitespace-nowrap`}>
+                    whitespace-nowrap`}
+                  >
                     {item.value}
                   </p>
                 </div>

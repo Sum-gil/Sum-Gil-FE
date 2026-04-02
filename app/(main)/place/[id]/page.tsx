@@ -5,7 +5,7 @@ import { SafetyAnalysisCard } from "@/components/place/safety-analysis-card"
 import { HealthScoreCard } from "@/components/place/health-score-card"
 import { notFound } from "next/navigation"
 
-const API_BASE = "http://localhost:8080/api/places"
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL
 
 const fallbackImages = [
   "/images/places/place1.jpg",
@@ -36,13 +36,13 @@ function getPlaceImages(id: string) {
 async function getPlaceData(id: string) {
   try {
     const [detail, health, safety] = await Promise.all([
-      fetch(`${API_BASE}/${id}`, { cache: "no-store" }).then((res) =>
+      fetch(`${API_BASE}/api/places/${id}`, { cache: "no-store" }).then((res) =>
         res.ok ? res.json() : null
       ),
-      fetch(`${API_BASE}/${id}/health-score`, { cache: "no-store" }).then((res) =>
+      fetch(`${API_BASE}/api/places/${id}/health-score`, { cache: "no-store" }).then((res) =>
         res.ok ? res.json() : null
       ),
-      fetch(`${API_BASE}/${id}/safety`, { cache: "no-store" }).then((res) =>
+      fetch(`${API_BASE}/api/places/${id}/safety`, { cache: "no-store" }).then((res) =>
         res.ok ? res.json() : null
       ),
     ])
@@ -61,10 +61,8 @@ export default async function PlaceDetailPage({
   const { id } = await params
   const { detail, health, safety } = await getPlaceData(id)
 
-  // 기본 정보(detail)가 없으면 404
   if (!detail) notFound()
 
-  // 백엔드 Grade(VERY_GOOD, GOOD 등)를 컴포넌트 status(safe, normal, caution)로 변환
   const getSafetyStatus = (grade: string) => {
     switch (grade) {
       case "VERY_GOOD":
@@ -81,16 +79,13 @@ export default async function PlaceDetailPage({
 
   return (
     <div className="container px-4 py-6 max-w-4xl mx-auto space-y-6">
-      {/* 1. 상단 헤더: 이름, 주소 */}
       <PlaceHeader
         name={detail.name}
         address={detail.address}
         images={placeImages}
       />
 
-      {/* 2. 점수 섹션: 건강과 안전 카드 나란히 배치 */}
       <div className="grid gap-6 md:grid-cols-2">
-        {/* 건강 점수 카드 매핑 */}
         {health && (
           <HealthScoreCard
             score={health.healthScore}
@@ -98,12 +93,11 @@ export default async function PlaceDetailPage({
             factors={{
               airQuality: health.airQualityScore,
               greenRatio: health.greenRatio,
-              visitorCount: health.visitorCount, // 실제 인구수 전달
+              visitorCount: health.visitorCount,
             }}
           />
         )}
 
-        {/* 안전 점수 카드 매핑 */}
         {safety && (
           <SafetyAnalysisCard
             status={getSafetyStatus(safety.grade)}
@@ -111,21 +105,15 @@ export default async function PlaceDetailPage({
             message={safety.message}
             factors={{
               cctvCount: safety.nearbyCctvCount,
-              nightSafe: safety.nightSafe, // Boolean 값 전달
+              nightSafe: safety.nightSafe,
               visitorCount: safety.visitorCount,
             }}
           />
         )}
       </div>
 
-      {/* 3. 장소 상세 정보 (설명글) */}
       <PlaceInfo description={detail.description} openHours="상시 개방" />
-
-      {/* 4. 하단 액션 버튼 (즐겨찾기 등) */}
       <PlaceActions placeId={id} />
-
-      {/* 디버그용 (필요 시 주석 해제하여 데이터 확인) */}
-      {/* <pre className="text-[10px] opacity-20">{JSON.stringify({ health, safety }, null, 2)}</pre> */}
     </div>
   )
 }

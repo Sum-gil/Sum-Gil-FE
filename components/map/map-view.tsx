@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import {
   Navigation,
   Store,
@@ -37,21 +37,16 @@ type MapViewProps = {
 
 function getMarkerImage(kakao: any, type: string) {
   const value = (type || "").toLowerCase()
-
   let imageSrc = ""
 
   if (value.includes("카페") || value.includes("cafe")) {
-    imageSrc =
-      "https://cdn-icons-png.flaticon.com/512/751/751621.png" // 커피
+    imageSrc = "https://cdn-icons-png.flaticon.com/512/751/751621.png"
   } else if (value.includes("편의점") || value.includes("store")) {
-    imageSrc =
-      "https://cdn-icons-png.flaticon.com/512/3081/3081559.png" // 편의점
+    imageSrc = "https://cdn-icons-png.flaticon.com/512/3081/3081559.png"
   } else if (value.includes("화장실") || value.includes("toilet")) {
-    imageSrc =
-      "https://cdn-icons-png.flaticon.com/512/684/684908.png" // 화장실
+    imageSrc = "https://cdn-icons-png.flaticon.com/512/684/684908.png"
   } else {
-    imageSrc =
-      "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png"
+    imageSrc = "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png"
   }
 
   return new kakao.maps.MarkerImage(
@@ -82,7 +77,6 @@ export function MapView({
     const initMap = async () => {
       try {
         const kakao = await loadKakaoMapScript()
-
         if (!mounted || !mapContainerRef.current) return
 
         const center = new kakao.maps.LatLng(
@@ -108,36 +102,25 @@ export function MapView({
     }
 
     initMap()
-
-    return () => {
-      mounted = false
-    }
-  }, [])
+    return () => { mounted = false }
+  }, []) 
 
   useEffect(() => {
     if (!mapRef.current || !window.kakao?.maps) return
 
     const kakao = window.kakao
-    const map = mapRef.current
-
-    if (currentMarkerRef.current) {
-      currentMarkerRef.current.setMap(null)
-    }
-
     const currentLatLng = new kakao.maps.LatLng(
       currentPosition.latitude,
       currentPosition.longitude
     )
 
-    currentMarkerRef.current = new kakao.maps.Marker({
-      map,
-      position: currentLatLng,
-    })
+    if (currentMarkerRef.current) {
+      currentMarkerRef.current.setPosition(currentLatLng)
+    }
   }, [currentPosition])
 
   useEffect(() => {
     if (!mapRef.current || !window.kakao?.maps) return
-
     const kakao = window.kakao
     const map = mapRef.current
 
@@ -145,16 +128,13 @@ export function MapView({
     placeMarkersRef.current = []
 
     places.forEach((place) => {
-      const markerPosition = new kakao.maps.LatLng(place.latitude, place.longitude)
-
       const marker = new kakao.maps.Marker({
         map,
-        position: markerPosition,
+        position: new kakao.maps.LatLng(place.latitude, place.longitude),
       })
 
       kakao.maps.event.addListener(marker, "click", () => {
         onSelectPlace(place.id)
-
         infoWindowRef.current?.setContent(`
           <div style="padding:8px 12px;font-size:13px;">
             <strong>${place.name}</strong>
@@ -162,14 +142,12 @@ export function MapView({
         `)
         infoWindowRef.current?.open(map, marker)
       })
-
       placeMarkersRef.current.push(marker)
     })
   }, [places, onSelectPlace])
 
   useEffect(() => {
     if (!mapRef.current || !window.kakao?.maps) return
-
     const kakao = window.kakao
     const map = mapRef.current
 
@@ -177,17 +155,10 @@ export function MapView({
     infraMarkersRef.current = []
 
     infrastructures.forEach((infra) => {
-      const markerPosition = new kakao.maps.LatLng(
-        infra.latitude,
-        infra.longitude
-      )
-
-      const markerImage = getMarkerImage(kakao, infra.type)
-
       const marker = new kakao.maps.Marker({
         map,
-        position: markerPosition,
-        image: markerImage,
+        position: new kakao.maps.LatLng(infra.latitude, infra.longitude),
+        image: getMarkerImage(kakao, infra.type),
       })
 
       kakao.maps.event.addListener(marker, "click", () => {
@@ -199,44 +170,32 @@ export function MapView({
         `)
         infoWindowRef.current?.open(map, marker)
       })
-
       infraMarkersRef.current.push(marker)
     })
   }, [infrastructures])
 
   useEffect(() => {
     if (!mapRef.current || !window.kakao?.maps || !selectedPlace) return
-
-    const kakao = window.kakao
-    const moveLatLng = new kakao.maps.LatLng(
-      selectedPlace.latitude,
-      selectedPlace.longitude
-    )
-
+    const moveLatLng = new window.kakao.maps.LatLng(selectedPlace.latitude, selectedPlace.longitude)
     mapRef.current.panTo(moveLatLng)
   }, [selectedPlace])
 
   const handleZoomIn = () => {
     if (!mapRef.current) return
-    const level = mapRef.current.getLevel()
-    mapRef.current.setLevel(level - 1)
+    mapRef.current.setLevel(mapRef.current.getLevel() - 1)
   }
 
   const handleZoomOut = () => {
     if (!mapRef.current) return
-    const level = mapRef.current.getLevel()
-    mapRef.current.setLevel(level + 1)
+    mapRef.current.setLevel(mapRef.current.getLevel() + 1)
   }
 
   const handleMoveToCurrentLocation = () => {
     if (!mapRef.current || !window.kakao?.maps) return
-
-    const kakao = window.kakao
-    const moveLatLng = new kakao.maps.LatLng(
+    const moveLatLng = new window.kakao.maps.LatLng(
       currentPosition.latitude,
       currentPosition.longitude
     )
-
     mapRef.current.panTo(moveLatLng)
   }
 
@@ -248,11 +207,9 @@ export function MapView({
         <Button variant="secondary" size="icon" onClick={handleZoomIn}>
           <Plus className="w-4 h-4" />
         </Button>
-
         <Button variant="secondary" size="icon" onClick={handleZoomOut}>
           <Minus className="w-4 h-4" />
         </Button>
-
         <Button variant="secondary" size="icon" onClick={handleMoveToCurrentLocation}>
           <Locate className="w-4 h-4" />
         </Button>
@@ -260,23 +217,19 @@ export function MapView({
 
       <div className="absolute bottom-4 left-4 bg-card rounded-xl p-3 shadow-lg z-10">
         <p className="text-xs font-medium text-foreground mb-2">범례</p>
-
         <div className="flex flex-wrap gap-3 text-xs">
           <div className="flex items-center gap-1">
             <Navigation className="w-4 h-4 text-primary" />
             <span className="text-muted-foreground">산책로</span>
           </div>
-
           <div className="flex items-center gap-1">
             <Store className="w-4 h-4 text-orange-500" />
             <span className="text-muted-foreground">편의점</span>
           </div>
-
           <div className="flex items-center gap-1">
             <Building2 className="w-4 h-4 text-blue-500" />
             <span className="text-muted-foreground">화장실</span>
           </div>
-
           <div className="flex items-center gap-1">
             <Coffee className="w-4 h-4 text-amber-500" />
             <span className="text-muted-foreground">카페</span>
@@ -286,15 +239,12 @@ export function MapView({
 
       <div className="absolute bottom-4 right-4 z-10">
         <Card className="rounded-xl p-3 shadow-lg">
-          <p className="text-xs font-medium text-foreground mb-1">현재 기준 좌표</p>
-          <p className="text-xs text-muted-foreground">
-            {currentPosition.latitude.toFixed(4)}, {currentPosition.longitude.toFixed(4)}
+          <p className="text-xs font-medium text-foreground mb-1">현재 위치</p>
+          <p className="text-[10px] text-muted-foreground font-mono">
+            {currentPosition.latitude.toFixed(6)}, {currentPosition.longitude.toFixed(6)}
           </p>
-          <p className="text-xs text-muted-foreground mt-1">
-            {selectedPlaceId ? `선택된 장소 ID: ${selectedPlaceId}` : "선택된 장소 없음"}
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">
-            편의시설 {infrastructures.length}개 표시 중
+          <p className="text-[10px] text-muted-foreground mt-1">
+            {selectedPlaceId ? `장소 ID: ${selectedPlaceId}` : "탐색 중..."}
           </p>
         </Card>
       </div>

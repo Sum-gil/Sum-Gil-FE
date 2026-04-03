@@ -4,7 +4,9 @@ import { useEffect, useMemo, useState, useCallback } from "react"
 import { MapView } from "@/components/map/map-view"
 import { PlaceListPanel } from "@/components/map/place-list-panel"
 import { apiFetch } from "@/lib/api"
-import { useCurrentLocation } from "@/hooks/use-current-location" // 훅 경로 확인
+import { useCurrentLocation } from "@/hooks/use-current-location" 
+import { AlertCircle } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 export type PlaceItem = {
   id: number
@@ -29,7 +31,8 @@ type InfrastructureItem = {
 }
 
 export default function MapPage() {
-  const { latitude, longitude, loading: locLoading } = useCurrentLocation()
+  const { latitude, longitude, loading: locLoading, error: locError } = useCurrentLocation()
+  
   const [places, setPlaces] = useState<PlaceItem[]>([])
   const [selectedPlaceId, setSelectedPlaceId] = useState<number | null>(null)
   const [infrastructures, setInfrastructures] = useState<InfrastructureItem[]>([])
@@ -62,6 +65,7 @@ export default function MapPage() {
       }))
 
       setPlaces(mapped)
+
       if (mapped.length > 0 && !selectedPlaceId) {
         setSelectedPlaceId(mapped[0].id)
       }
@@ -106,9 +110,26 @@ export default function MapPage() {
   if (locLoading && !latitude) {
     return (
       <div className="flex h-[calc(100vh-4rem)] items-center justify-center bg-background">
-        <div className="text-center space-y-2">
+        <div className="text-center space-y-3">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
-          <p className="text-muted-foreground">현재 위치를 확인 중입니다...</p>
+          <p className="text-muted-foreground animate-pulse">사용자의 위치를 파악하고 있습니다...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (locError || (!latitude && !locLoading)) {
+    return (
+      <div className="flex h-[calc(100vh-4rem)] items-center justify-center bg-background p-6">
+        <div className="text-center space-y-4 max-w-sm">
+          <AlertCircle className="w-12 h-12 text-destructive mx-auto" />
+          <h2 className="text-xl font-bold">위치 정보를 사용할 수 없습니다</h2>
+          <p className="text-muted-foreground text-sm">
+            주변 산책로를 찾기 위해 위치 권한이 필요합니다. 브라우저 설정에서 위치 권한을 허용해 주세요.
+          </p>
+          <Button onClick={() => window.location.reload()} variant="outline" className="w-full">
+            다시 시도하기
+          </Button>
         </div>
       </div>
     )

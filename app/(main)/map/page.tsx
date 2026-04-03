@@ -1,9 +1,10 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState, useCallback } from "react"
 import { MapView } from "@/components/map/map-view"
 import { PlaceListPanel } from "@/components/map/place-list-panel"
 import { apiFetch } from "@/lib/api"
+import { useCurrentLocation } from "@/hooks/use-current-location" // 훅 경로 확인
 
 export type PlaceItem = {
   id: number
@@ -28,56 +29,55 @@ type InfrastructureItem = {
 }
 
 export default function MapPage() {
+  const { latitude, longitude, loading: locLoading } = useCurrentLocation()
   const [places, setPlaces] = useState<PlaceItem[]>([])
   const [selectedPlaceId, setSelectedPlaceId] = useState<number | null>(null)
   const [infrastructures, setInfrastructures] = useState<InfrastructureItem[]>([])
   const [loading, setLoading] = useState(true)
 
-  const latitude = 37.5665
-  const longitude = 126.978
   const radius = 3000
 
-  useEffect(() => {
-    const fetchPlaces = async () => {
-      try {
-        setLoading(true)
+  const fetchPlaces = useCallback(async (lat: number, lng: number) => {
+    try {
+      setLoading(true)
+      const data = await apiFetch<any[]>(
+        `/api/places?latitude=${lat}&longitude=${lng}&radius=${radius}`
+      )
 
-        const data = await apiFetch<any[]>(
-          `/api/places?latitude=${latitude}&longitude=${longitude}&radius=${radius}`
-        )
+      const mapped: PlaceItem[] = data.map((item, index) => ({
+        id: item.placeId ?? item.id ?? index + 1,
+        placeId: item.placeId ?? item.id ?? index + 1,
+        name: item.placeName ?? item.name ?? "이름 없는 장소",
+        address: item.address ?? item.roadAddress ?? "",
+        latitude: item.latitude,
+        longitude: item.longitude,
+        healthScore: item.healthScore,
+        safetyScore: item.safetyScore,
+        reviews: item.reviews,
+        category: item.category ?? "산책로",
+        distance:
+          typeof item.distance === "number"
+            ? `${(item.distance / 1000).toFixed(1)}km`
+            : item.distance,
+      }))
 
-        const mapped: PlaceItem[] = data.map((item, index) => ({
-          id: item.placeId ?? item.id ?? index + 1,
-          placeId: item.placeId ?? item.id ?? index + 1,
-          name: item.placeName ?? item.name ?? "이름 없는 장소",
-          address: item.address ?? item.roadAddress ?? "",
-          latitude: item.latitude,
-          longitude: item.longitude,
-          healthScore: item.healthScore,
-          safetyScore: item.safetyScore,
-          reviews: item.reviews,
-          category: item.category ?? "산책로",
-          distance:
-            typeof item.distance === "number"
-              ? `${(item.distance / 1000).toFixed(1)}km`
-              : item.distance,
-        }))
-
-        setPlaces(mapped)
-
-        if (mapped.length > 0) {
-          setSelectedPlaceId(mapped[0].id)
-        }
-      } catch (error) {
-        console.error("장소 조회 실패:", error)
-        setPlaces([])
-      } finally {
-        setLoading(false)
+      setPlaces(mapped)
+      if (mapped.length > 0 && !selectedPlaceId) {
+        setSelectedPlaceId(mapped[0].id)
       }
+    } catch (error) {
+      console.error("장소 조회 실패:", error)
+      setPlaces([])
+    } finally {
+      setLoading(false)
     }
+  }, [selectedPlaceId, radius])
 
-    fetchPlaces()
-  }, [])
+  useEffect(() => {
+    if (latitude && longitude) {
+      fetchPlaces(latitude, longitude)
+    }
+  }, [latitude, longitude, fetchPlaces])
 
   useEffect(() => {
     const fetchInfrastructures = async () => {
@@ -85,7 +85,6 @@ export default function MapPage() {
         setInfrastructures([])
         return
       }
-
       try {
         const data = await apiFetch<InfrastructureItem[]>(
           `/api/places/${selectedPlaceId}/infrastructures`
@@ -96,7 +95,6 @@ export default function MapPage() {
         setInfrastructures([])
       }
     }
-
     fetchInfrastructures()
   }, [selectedPlaceId])
 
@@ -104,6 +102,17 @@ export default function MapPage() {
     () => places.find((place) => place.id === selectedPlaceId) ?? null,
     [places, selectedPlaceId]
   )
+
+  if (locLoading && !latitude) {
+    return (
+      <div className="flex h-[calc(100vh-4rem)] items-center justify-center bg-background">
+        <div className="text-center space-y-2">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
+          <p className="text-muted-foreground">현재 위치를 확인 중입니다...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="h-[calc(100vh-4rem)] overflow-hidden">
@@ -113,7 +122,7 @@ export default function MapPage() {
           selectedPlaceId={selectedPlaceId}
           onSelectPlace={setSelectedPlaceId}
           loading={loading}
-          currentPosition={{ latitude, longitude }}
+          currentPosition={{ latitude: latitude!, longitude: longitude! }}
         />
 
         <MapView
@@ -121,7 +130,7 @@ export default function MapPage() {
           infrastructures={infrastructures}
           selectedPlaceId={selectedPlaceId}
           selectedPlace={selectedPlace}
-          currentPosition={{ latitude, longitude }}
+          currentPosition={{ latitude: latitude!, longitude: longitude! }}
           onSelectPlace={setSelectedPlaceId}
         />
       </div>

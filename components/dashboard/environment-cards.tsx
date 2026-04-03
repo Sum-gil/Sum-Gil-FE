@@ -1,11 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { Wind, Thermometer, Droplets, Sun, MapPin, AlertCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+
+interface EnvironmentCardsProps {
+  lat: number | null;
+  lng: number | null;
+}
 
 interface EnvironmentResponse {
   region: string;
@@ -27,94 +32,80 @@ interface EnvItem {
   bgColor: string;
 }
 
-export function EnvironmentCards() {
+export function EnvironmentCards({ lat, lng }: EnvironmentCardsProps) {
   const [data, setData] = useState<EnvItem[]>([]);
   const [regionName, setRegionName] = useState("");
   const [rawMessage, setRawMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const getLocationAndFetch = () => {
-      if (!navigator.geolocation) {
-        setError("위치 정보를 지원하지 않는 브라우저입니다.");
-        setLoading(false);
-        return;
-      }
+  const fetchEnvironmentData = useCallback(async (latitude: number, longitude: number) => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("accessToken");
 
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords;
-          await fetchEnvironmentData(latitude, longitude);
-        },
-        (err) => {
-          console.error("위치 획득 실패:", err);
-          setError("위치 권한을 허용해주세요.");
-          setLoading(false);
+      const response = await axios.get<EnvironmentResponse>(
+        `${API_BASE}/api/dashboard/environment?lat=${latitude}&lng=${longitude}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
-    };
 
-    const fetchEnvironmentData = async (lat: number, lng: number) => {
-      try {
-        const token = localStorage.getItem("accessToken");
+      const res = response.data;
+      setRegionName(res.region);
+      setRawMessage(res.message);
 
-        const response = await axios.get<EnvironmentResponse>(
-          `${API_BASE}/api/dashboard/environment?lat=${lat}&lng=${lng}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+      const mappedData: EnvItem[] = [
+        {
+          icon: Wind,
+          label: "미세먼지",
+          value: `${res.status === "GOOD" ? "좋음" : res.status === "BAD" ? "나쁨" : "보통"} (${res.pm10}㎍/㎥)`,
+          color: res.status === "GOOD" ? "text-blue-500" : res.status === "BAD" ? "text-red-500" : "text-amber-500",
+          bgColor: res.status === "GOOD" ? "bg-blue-50" : res.status === "BAD" ? "bg-red-50" : "bg-amber-50",
+        },
+        {
+          icon: Thermometer,
+          label: "기온",
+          value: `${res.temperature}°C`,
+          color: "text-primary",
+          bgColor: "bg-primary/10",
+        },
+        {
+          icon: Droplets,
+          label: "습도",
+          value: `${res.humidity}%`,
+          color: "text-accent",
+          bgColor: "bg-accent/10",
+        },
+        {
+          icon: Sun,
+          label: "산책 추천",
+          value: res.walkable ? "추천" : "비추천",
+          color: res.walkable ? "text-green-600" : "text-red-500",
+          bgColor: res.walkable ? "bg-green-50" : "bg-red-50",
+        },
+      ];
 
-        const res = response.data;
-        setRegionName(res.region);
-        setRawMessage(res.message);
-
-        const mappedData: EnvItem[] = [
-          {
-            icon: Wind,
-            label: "미세먼지",
-            value: `${res.status === "GOOD" ? "좋음" : res.status === "BAD" ? "나쁨" : "보통"} (${res.pm10}㎍/㎥)`,
-            color: res.status === "GOOD" ? "text-blue-500" : res.status === "BAD" ? "text-red-500" : "text-amber-500",
-            bgColor: res.status === "GOOD" ? "bg-blue-50" : res.status === "BAD" ? "bg-red-50" : "bg-amber-50",
-          },
-          {
-            icon: Thermometer,
-            label: "기온",
-            value: `${res.temperature}°C`,
-            color: "text-primary",
-            bgColor: "bg-primary/10",
-          },
-          {
-            icon: Droplets,
-            label: "습도",
-            value: `${res.humidity}%`,
-            color: "text-accent",
-            bgColor: "bg-accent/10",
-          },
-          {
-            icon: Sun,
-            label: "산책 추천",
-            value: res.walkable ? "추천" : "비추천",
-            color: res.walkable ? "text-green-600" : "text-red-500",
-            bgColor: res.walkable ? "bg-green-50" : "bg-red-50",
-          },
-        ];
-
-        setData(mappedData);
-      } catch (err: any) {
-        console.error("환경 정보 로드 실패:", err);
-        setError("데이터를 불러오는 데 실패했습니다.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    getLocationAndFetch();
+      setData(mappedData);
+      setError(null);
+    } catch (err: any) {
+      console.error("환경 정보 로드 실패:", err);
+      setError("환경 데이터를 불러오는 데 실패했습니다.");
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  if (loading) return <div className="p-8 text-center animate-pulse text-muted-foreground">현재 위치 환경 분석 중...</div>;
-  if (error) return <div className="p-8 text-center text-red-500">{error}</div>;
+  useEffect(() => {
+    if (lat && lng) {
+      fetchEnvironmentData(lat, lng);
+    } else if (!lat || !lng) {
+      setLoading(true);
+    }
+  }, [lat, lng, fetchEnvironmentData]);
+
+  if (loading && !data.length) return <div className="p-8 text-center animate-pulse text-muted-foreground">현재 위치 환경 분석 중...</div>;
+  if (error && !data.length) return <div className="p-8 text-center text-red-500">{error}</div>;
 
   return (
     <section className="space-y-4">
@@ -150,11 +141,7 @@ export function EnvironmentCards() {
                   <p className="text-[10px] md:text-xs text-muted-foreground leading-tight">
                     {item.label}
                   </p>
-                  <p
-                    className={`font-bold ${item.color} 
-                    text-[13px] sm:text-sm md:text-base lg:text-lg
-                    whitespace-nowrap`}
-                  >
+                  <p className={`font-bold ${item.color} text-[13px] sm:text-sm md:text-base lg:text-lg whitespace-nowrap`}>
                     {item.value}
                   </p>
                 </div>

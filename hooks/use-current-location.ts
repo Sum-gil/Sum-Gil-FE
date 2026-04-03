@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 
-type LocationState = {
+export type LocationState = {
   latitude: number
   longitude: number
   loading: boolean
@@ -11,7 +11,7 @@ type LocationState = {
 }
 
 const FALLBACK_LOCATION = {
-  latitude: 37.5665,
+  latitude: 37.5665, 
   longitude: 126.9780,
 }
 
@@ -30,35 +30,41 @@ export function useCurrentLocation() {
         ...prev,
         loading: false,
         isFallback: true,
-        error: "브라우저에서 위치 정보를 지원하지 않습니다.",
+        error: "이 브라우저는 위치 정보를 지원하지 않습니다.",
       }))
       return
     }
 
-    navigator.geolocation.getCurrentPosition(
+    const watchId = navigator.geolocation.watchPosition(
       (position) => {
+        const { latitude, longitude } = position.coords;
         setLocation({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
+          latitude,
+          longitude,
           loading: false,
           isFallback: false,
           error: "",
         })
       },
-      () => {
+      (error) => {
+        let errorMessage = "위치 정보를 가져올 수 없습니다.";
+        if (error.code === 1) errorMessage = "위치 권한이 거부되었습니다.";
+        
         setLocation((prev) => ({
           ...prev,
           loading: false,
           isFallback: true,
-          error: "위치 권한이 거부되어 기본 좌표를 사용합니다.",
+          error: errorMessage,
         }))
       },
       {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 1000 * 60 * 5,
+        enableHighAccuracy: true, 
+        maximumAge: 0,            
+        timeout: 10000,           
       }
     )
+
+    return () => navigator.geolocation.clearWatch(watchId)
   }, [])
 
   return location

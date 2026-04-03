@@ -1,12 +1,13 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { EnvironmentCards } from "@/components/dashboard/environment-cards"
 import { AISearchSection } from "@/components/dashboard/ai-search-section"
 import { RecommendedPlaces } from "@/components/dashboard/recommended-places"
 import { QuickActions } from "@/components/dashboard/quick-actions"
 import { apiFetch } from "@/lib/api"
 import { fetchAiRecommendations, type RecommendedPlace } from "@/lib/ai-recommend"
+import { useCurrentLocation } from "@/hooks/use-current-location" 
 
 type DefaultPlace = {
   placeId?: number
@@ -31,23 +32,17 @@ const fallbackImages = [
 
 function shuffleArray<T>(array: T[]) {
   const newArray = [...array]
-
   for (let i = newArray.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1))
     ;[newArray[i], newArray[j]] = [newArray[j], newArray[i]]
   }
-
   return newArray
 }
 
 function assignRandomImages(places: any[]) {
   const shuffled = shuffleArray(fallbackImages)
-
   return places.map((place, index) => {
-    if (place.image && place.image.trim() !== "") {
-      return place
-    }
-
+    if (place.image && place.image.trim() !== "") return place
     return {
       ...place,
       image: shuffled[index % shuffled.length],
@@ -56,6 +51,8 @@ function assignRandomImages(places: any[]) {
 }
 
 export default function DashboardPage() {
+  const { latitude, longitude, loading: locLoading, error: locError } = useCurrentLocation()
+  
   const [query, setQuery] = useState("")
   const [places, setPlaces] = useState<(DefaultPlace | RecommendedPlace)[]>([])
   const [loading, setLoading] = useState(true)
@@ -63,11 +60,9 @@ export default function DashboardPage() {
   const [summary, setSummary] = useState("")
   const [isAiMode, setIsAiMode] = useState(false)
 
-  const latitude = 37.5665
-  const longitude = 126.9780
-  const radius = 3000
+  const radius = 3000 
 
-  const fetchDefaultPlaces = async () => {
+  const fetchDefaultPlaces = useCallback(async (lat: number, lng: number) => {
     try {
       setLoading(true)
       setError("")
@@ -75,7 +70,7 @@ export default function DashboardPage() {
       setIsAiMode(false)
 
       const data = await apiFetch<DefaultPlace[]>(
-        `/api/places?latitude=${latitude}&longitude=${longitude}&radius=${radius}`
+        `/api/places?latitude=${lat}&longitude=${lng}&radius=${radius}`
       )
 
       setPlaces(assignRandomImages(data))
@@ -85,11 +80,13 @@ export default function DashboardPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [radius])
 
   const handleSearch = async () => {
+    if (!latitude || !longitude) return;
+
     if (!query.trim()) {
-      fetchDefaultPlaces()
+      fetchDefaultPlaces(latitude, longitude)
       return
     }
 
@@ -119,21 +116,32 @@ export default function DashboardPage() {
 
   const handleReset = async () => {
     setQuery("")
-    await fetchDefaultPlaces()
+    if (latitude && longitude) await fetchDefaultPlaces(latitude, longitude)
   }
 
   useEffect(() => {
-    fetchDefaultPlaces()
-  }, [])
+    if (latitude && longitude) {
+      fetchDefaultPlaces(latitude, longitude)
+    }
+  }, [latitude, longitude, fetchDefaultPlaces])
+
+  if (locLoading && !latitude) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="animate-pulse">위치 정보를 확인하고 있습니다...</p>
+      </div>
+    )
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6 space-y-8">
       <section className="space-y-2">
         <h1 className="text-2xl font-bold text-foreground">안녕하세요!</h1>
         <p className="text-muted-foreground">오늘도 건강한 산책을 시작해볼까요?</p>
+        {locError && <p className="text-xs text-red-400">{locError} (기본 위치 기반으로 표시됩니다)</p>}
       </section>
 
-      <EnvironmentCards />
+      <EnvironmentCards lat={latitude} lng={longitude} />
 
       <AISearchSection
         query={query}

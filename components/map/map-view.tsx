@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef } from "react"
 import {
   Navigation,
   Store,
@@ -70,6 +70,7 @@ export function MapView({
   const infraMarkersRef = useRef<any[]>([])
   const currentMarkerRef = useRef<any>(null)
   const infoWindowRef = useRef<any>(null)
+  const hasMovedToCurrentRef = useRef(false)
 
   useEffect(() => {
     let mounted = true
@@ -102,8 +103,11 @@ export function MapView({
     }
 
     initMap()
-    return () => { mounted = false }
-  }, []) 
+
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   useEffect(() => {
     if (!mapRef.current || !window.kakao?.maps) return
@@ -116,11 +120,22 @@ export function MapView({
 
     if (currentMarkerRef.current) {
       currentMarkerRef.current.setPosition(currentLatLng)
+    } else {
+      currentMarkerRef.current = new kakao.maps.Marker({
+        map: mapRef.current,
+        position: currentLatLng,
+      })
+    }
+
+    if (!hasMovedToCurrentRef.current) {
+      mapRef.current.panTo(currentLatLng)
+      hasMovedToCurrentRef.current = true
     }
   }, [currentPosition])
 
   useEffect(() => {
     if (!mapRef.current || !window.kakao?.maps) return
+
     const kakao = window.kakao
     const map = mapRef.current
 
@@ -135,6 +150,7 @@ export function MapView({
 
       kakao.maps.event.addListener(marker, "click", () => {
         onSelectPlace(place.id)
+
         infoWindowRef.current?.setContent(`
           <div style="padding:8px 12px;font-size:13px;">
             <strong>${place.name}</strong>
@@ -142,12 +158,14 @@ export function MapView({
         `)
         infoWindowRef.current?.open(map, marker)
       })
+
       placeMarkersRef.current.push(marker)
     })
   }, [places, onSelectPlace])
 
   useEffect(() => {
     if (!mapRef.current || !window.kakao?.maps) return
+
     const kakao = window.kakao
     const map = mapRef.current
 
@@ -170,13 +188,19 @@ export function MapView({
         `)
         infoWindowRef.current?.open(map, marker)
       })
+
       infraMarkersRef.current.push(marker)
     })
   }, [infrastructures])
 
   useEffect(() => {
     if (!mapRef.current || !window.kakao?.maps || !selectedPlace) return
-    const moveLatLng = new window.kakao.maps.LatLng(selectedPlace.latitude, selectedPlace.longitude)
+
+    const moveLatLng = new window.kakao.maps.LatLng(
+      selectedPlace.latitude,
+      selectedPlace.longitude
+    )
+
     mapRef.current.panTo(moveLatLng)
   }, [selectedPlace])
 
@@ -192,10 +216,12 @@ export function MapView({
 
   const handleMoveToCurrentLocation = () => {
     if (!mapRef.current || !window.kakao?.maps) return
+
     const moveLatLng = new window.kakao.maps.LatLng(
       currentPosition.latitude,
       currentPosition.longitude
     )
+
     mapRef.current.panTo(moveLatLng)
   }
 
@@ -207,29 +233,39 @@ export function MapView({
         <Button variant="secondary" size="icon" onClick={handleZoomIn}>
           <Plus className="w-4 h-4" />
         </Button>
+
         <Button variant="secondary" size="icon" onClick={handleZoomOut}>
           <Minus className="w-4 h-4" />
         </Button>
-        <Button variant="secondary" size="icon" onClick={handleMoveToCurrentLocation}>
+
+        <Button
+          variant="secondary"
+          size="icon"
+          onClick={handleMoveToCurrentLocation}
+        >
           <Locate className="w-4 h-4" />
         </Button>
       </div>
 
       <div className="absolute bottom-4 left-4 bg-card rounded-xl p-3 shadow-lg z-10">
         <p className="text-xs font-medium text-foreground mb-2">범례</p>
+
         <div className="flex flex-wrap gap-3 text-xs">
           <div className="flex items-center gap-1">
             <Navigation className="w-4 h-4 text-primary" />
             <span className="text-muted-foreground">산책로</span>
           </div>
+
           <div className="flex items-center gap-1">
             <Store className="w-4 h-4 text-orange-500" />
             <span className="text-muted-foreground">편의점</span>
           </div>
+
           <div className="flex items-center gap-1">
             <Building2 className="w-4 h-4 text-blue-500" />
             <span className="text-muted-foreground">화장실</span>
           </div>
+
           <div className="flex items-center gap-1">
             <Coffee className="w-4 h-4 text-amber-500" />
             <span className="text-muted-foreground">카페</span>
@@ -241,7 +277,8 @@ export function MapView({
         <Card className="rounded-xl p-3 shadow-lg">
           <p className="text-xs font-medium text-foreground mb-1">현재 위치</p>
           <p className="text-[10px] text-muted-foreground font-mono">
-            {currentPosition.latitude.toFixed(6)}, {currentPosition.longitude.toFixed(6)}
+            {currentPosition.latitude.toFixed(6)},{" "}
+            {currentPosition.longitude.toFixed(6)}
           </p>
           <p className="text-[10px] text-muted-foreground mt-1">
             {selectedPlaceId ? `장소 ID: ${selectedPlaceId}` : "탐색 중..."}

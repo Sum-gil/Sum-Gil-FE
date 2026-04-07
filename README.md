@@ -1,5 +1,5 @@
 ## 🌿 Sum-Gil (숨길)
-> <img width="130" alt="숨길 로고" src="https://github.com/user-attachments/assets/로고_이미지_주소" />
+> <img width="130" alt="숨길 로고" src="https://github.com/M4rs0312/m4rs.github.io/blob/main/5313c534-7153-48d7-ae16-b393dfdc9d42.jpg" />
 > 
 > **숨길_SUM-GIL** > *도심 속 숨은 산책길을 찾고, 당신의 건강한 발걸음을 기록하는 위치 기반 산책 서비스*
 

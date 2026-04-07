@@ -1,4 +1,4 @@
-## 🌿 Sum-Gil (숨길)
+## 🌿 숨길 (Sum-Gil)
 > <img width="130" alt="숨길 로고" src="https://github.com/M4rs0312/m4rs.github.io/blob/main/5313c534-7153-48d7-ae16-b393dfdc9d42.jpg" />
 > 
 > **숨길_SUM-GIL** > *도심 속 숨은 산책길을 찾고, 당신의 건강한 발걸음을 기록하는 위치 기반 산책 서비스*
@@ -7,7 +7,7 @@
 
 # 🎨 프로젝트 개요
 <div align=center>
-<img width="1000" alt="프로젝트소개" src="https://github.com/user-attachments/assets/메인_소개_이미지_주소" />
+<img width="700" alt="프로젝트소개" src="https://github.com/M4rs0312/m4rs.github.io/blob/main/%ED%99%94%EB%A9%B4%20%EC%BA%A1%EC%B2%98%202026-04-07%20164545.png" />
 <br></br>	
 </div>
 

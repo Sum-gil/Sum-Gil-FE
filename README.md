@@ -144,10 +144,9 @@
 <div align=center>
 	<h1>👑 Developers 👑</h1>
 	
-| <img src="https://github.com/본인ID.png" width="80"> | <img src="https://github.com/파트너ID.png" width="80"> |
+| <img src="https://github.com/M4rs0312.png" width="80"> | <img src="https://github.com/rudals2334.png" width="80"> |
 | :---: | :---: |
-| **본인 이름** | **파트너 이름** |
-| [GitHub](https://github.com/본인ID) | [GitHub](https://github.com/파트너ID) |
-| **Backend / Infra** | **Frontend / UI** |
+| [정회성](https://github.com/M4rs0312) | [이경민](https://github.com/rudals2334) |
+| **FrontEnd** | **FrontEnd** |
 
 </div>

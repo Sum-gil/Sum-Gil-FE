@@ -103,9 +103,9 @@
 ### 8. 모바일 반응형 최적화
 모든 기능은 야외 산책 중에도 조작이 편리하도록 모바일 최적화 레이아웃을 지원합니다.
 
-| 모바일 메인 | 모바일 트래커 | 모바일 상세 |
+| 모바일 메인 | 모바일 상세 | 모바일 트래커 |
 | :---: | :---: | :---: |
-| <img src="https://github.com/user-attachments/assets/모바일1" width="250"> | <img src="https://github.com/user-attachments/assets/모바일2" width="250"> | <img src="https://github.com/user-attachments/assets/모바일3" width="250"> |
+| <img src="https://github.com/M4rs0312/m4rs.github.io/blob/main/KakaoTalk_20260407_162927353.png" width="250"> | <img src="https://github.com/M4rs0312/m4rs.github.io/blob/main/KakaoTalk_20260407_162927353_01.png" width="250"> | <img src="https://github.com/M4rs0312/m4rs.github.io/blob/main/KakaoTalk_20260407_162927353_02.png" width="250"> |
 
 </div>
 

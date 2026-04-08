@@ -82,7 +82,7 @@
 ### 6. 산책 리포트 및 통계 (Walking Report & Statistics)
 사용자의 산책 기록을 월별로 집계하여 시각화하고, 개별 산책에 대한 상세 분석 데이터를 제공합니다.
 
-<img width="800" alt="산책기록페이지" src="https://github.com/M4rs0312/m4rs.github.io/blob/main/www.sumgil.shop_report.png" />
+<img width="800" alt="산책기록페이지" src="https://github.com/M4rs0312/m4rs.github.io/blob/main/www.sumgil.shop_report%20(4).png" />
 
 ---
 

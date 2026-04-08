@@ -75,19 +75,27 @@
 ### 5. 산책 기록 및 트래커 (Live Tracking)
 산책 시작 버튼을 누르면 즉시 전환되는 페이지입니다. 현재 이동 경로와 시간, 거리를 실시간으로 트래킹하며, 타임스탬프 로직을 통해 백그라운드에서도 정확한 기록이 유지됩니다.
 
-<img width="800" alt="산책기록페이지" src="https://github.com/user-attachments/assets/이미지_주소_3" />
+<img width="800" alt="산책기록페이지" src="https://github.com/M4rs0312/m4rs.github.io/blob/main/www.sumgil.shop_report%20(3).png" />
 
 ---
 
-### 6. 커뮤니티 페이지 (Community)
+### 6. 산책 리포트 및 통계 (Walking Report & Statistics)
+사용자의 산책 기록을 월별로 집계하여 시각화하고, 개별 산책에 대한 상세 분석 데이터를 제공합니다.
+
+<img width="800" alt="산책기록페이지" src="https://github.com/M4rs0312/m4rs.github.io/blob/main/www.sumgil.shop_report.png" />
+
+---
+
+### 7. 커뮤니티 페이지 (Community)
 산책 코스 후기나 정보 공유가 이루어지는 소통 공간입니다. 다양한 사용자의 산책 경험을 공유하며 새로운 산책로를 발견할 수 있습니다.
 
-<img width="800" alt="커뮤니티페이지" src="https://github.com/user-attachments/assets/커뮤니티_이미지_주소" />
+<img width="800" alt="커뮤니티페이지" src="https://github.com/M4rs0312/m4rs.github.io/blob/main/www.sumgil.shop_report%20(2).png" />
 
 ---
 
-### 7. 마이페이지 및 설정 (My Page & Settings)
+### 8. 마이페이지 및 설정 (My Page & Settings)
 사용자의 활동 이력을 관리하며, 편리한 서비스 이용을 위한 다양한 설정을 제공합니다.
+<img width="800" alt="마이페이지" src="https://github.com/M4rs0312/m4rs.github.io/blob/main/www.sumgil.shop_report%20(1).png" />
 
 * **활동 통계:** 누적 거리, 시간, 칼로리 등 개인 활동 데이터를 관리합니다.
 * **알림 설정:** 푸시 알림 및 서비스 공지 수신 여부를 설정할 수 있습니다.

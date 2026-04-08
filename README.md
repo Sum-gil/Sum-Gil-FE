@@ -150,7 +150,7 @@
 <br></br>
 
 <div align=center>
-	<h1>👑 Developers 👑</h1>
+	<h1>👨‍💻 FE Developers </h1>
 	
 | <img src="https://github.com/M4rs0312.png" width="80"> | <img src="https://github.com/rudals2334.png" width="80"> |
 | :---: | :---: |

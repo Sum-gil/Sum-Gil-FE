@@ -61,7 +61,7 @@
 ### 3. 지도 탐색 페이지 (Map Exploration)
 주변의 숨은 산책길을 지도 위에서 탐색합니다. 각 핀을 통해 실제 산책이 가능한 장소들을 직관적으로 확인하고 선택할 수 있습니다.
 
-<img width="800" alt="지도탐색페이지" src="https://github.com/M4rs0312/m4rs.github.io/blob/main/www.sumgil.shop_login_callback_code%3DTCd3ZhTyvvs7j_svr6cHYhTmbB2x5zyz_5PvTnQgGEkOB_MP5i6VKwAAAAQKDSHZAAABnWbAsG0e0jm_MNo9Pw%20(1).png?raw=true" />
+<img width="800" alt="지도탐색페이지" src="https://github.com/M4rs0312/m4rs.github.io/blob/main/www.sumgil.shop_login_callback_code%3DTCd3ZhTyvvs7j_svr6cHYhTmbB2x5zyz_5PvTnQgGEkOB_MP5i6VKwAAAAQKDSHZAAABnWbAsG0e0jm_MNo9Pw.png" />
 
 ---
 
